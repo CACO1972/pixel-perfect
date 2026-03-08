@@ -23,7 +23,7 @@ const SiteFooter = () => (
 
       <div className="mt-8 pt-6 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-3">
         <span className="font-mono text-[0.7rem] text-mid-gray">
-          Dr. Carlos Montoya · 30+ años · 11.000+ implantes documentados
+          Clínica Miró · 30+ años de experiencia · Potenciada por HUMANA.AI
         </span>
         <span className="font-mono text-[0.7rem] text-mid-gray">© 2026 Clínica Miró</span>
       </div>
