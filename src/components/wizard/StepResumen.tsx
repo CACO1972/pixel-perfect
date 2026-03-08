@@ -67,8 +67,17 @@ const StepResumen = ({ data, back }: Props) => {
         console.warn("WhatsApp notify failed (non-blocking):", e);
       }
 
-      // 3. Create payment
+      // 3. Save patient data for post-payment WhatsApp
       const orderId = `eval-${Date.now()}`;
+      sessionStorage.setItem("miro_patient", JSON.stringify({
+        nombre: data.nombre,
+        whatsapp: data.whatsapp,
+        email: data.email,
+        orderId,
+      }));
+
+      // 4. Create payment with return URL
+      const returnUrl = `${window.location.origin}/pago-exitoso`;
       const paymentRes = await createPayment({
         email: data.email,
         amount: 49000,
@@ -76,9 +85,10 @@ const StepResumen = ({ data, back }: Props) => {
         commerceOrder: orderId,
         nombre: data.nombre,
         telefono: data.whatsapp,
+        urlReturn: returnUrl,
       });
 
-      // 4. Redirect to Flow.cl
+      // 5. Redirect to Flow.cl
       window.location.href = `${paymentRes.url}?token=${paymentRes.token}`;
     } catch (err) {
       console.error("Payment error:", err);
