@@ -21,15 +21,9 @@ const RoutesSection = () => {
         </div>
 
         <div className="border-t border-border">
-          {routes.map((route) => {
-            const ref = useScrollReveal();
-            return (
-              <a
-                key={route.num}
-                ref={ref}
-                href="#form"
-                className="reveal group flex items-center justify-between py-6 md:py-10 border-b border-border no-underline text-foreground hover:pl-4 transition-all relative"
-              >
+          {routes.map((route) => (
+              <RouteItem key={route.num} route={route} />
+          ))}
                 <div className="absolute left-0 top-0 bottom-0 w-0 bg-accent group-hover:w-[3px] transition-all duration-500" />
                 <div className="flex items-baseline gap-4 md:gap-10">
                   <span className="font-mono text-[0.7rem] tracking-[0.2em] text-accent font-semibold min-w-[2rem]">
