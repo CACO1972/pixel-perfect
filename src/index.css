@@ -40,8 +40,14 @@
     --gold: 34 38% 63%;
     --gold-light: 37 52% 80%;
     --off-white: 40 14% 96%;
+    --ivory: 39 47% 97%;
     --mid-gray: 0 0% 60%;
     --dark-gray: 0 0% 20%;
+    --navy: 213 52% 24%;
+    --navy-light: 213 52% 35%;
+    --status-success: 122 39% 45%;
+    --status-warning: 45 96% 56%;
+    --status-urgent: 0 72% 47%;
 
     --font-display: 'Outfit', sans-serif;
     --font-serif: 'Cormorant Garamond', serif;

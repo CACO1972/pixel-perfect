@@ -7,19 +7,21 @@ const CtaSection = () => {
   return (
     <section id="form" className="py-24 md:py-40 bg-secondary text-center">
       <div className="container">
-        <h2 ref={headlineRef} className="reveal font-display font-[900] text-[clamp(2rem,6vw,5rem)] uppercase tracking-[-0.03em] leading-[0.95] mb-8">
-          Tu sonrisa merece<br />una decisión <span className="text-accent">informada.</span>
+        <h2 ref={headlineRef} className="reveal font-serif font-light text-[clamp(2rem,5vw,4rem)] tracking-[-0.01em] leading-[1.05] mb-8">
+          Tu evaluación,<br />potenciada por <span className="text-accent">IA.</span>
         </h2>
-        <p className="font-serif italic text-[clamp(1rem,2vw,1.3rem)] text-mid-gray mb-12">
-          Evidencia científica + predicción de escenarios. Traducidos a claridad.
+        <p className="font-body text-[clamp(1rem,2vw,1.2rem)] text-mid-gray mb-12 max-w-lg mx-auto">
+          Evidencia científica + predicción de escenarios. Traducidos a un Informe Clarity para ti y tu familia.
         </p>
 
         {/* Price highlight */}
-        <div className="inline-flex items-center gap-6 px-8 py-5 bg-background border border-border rounded-2xl mb-10">
-          <span className="text-[2.5rem] font-[800] text-accent leading-none tabular-nums">$49.000</span>
+        <div className="inline-flex items-center gap-6 px-8 py-5 bg-background border border-border mb-10">
+          <span className="text-[2.5rem] font-display font-[800] text-accent leading-none tabular-nums">$49.000</span>
           <div className="text-left">
             <div className="text-[0.85rem] font-semibold">Evaluación Dental Premium</div>
-            <div className="text-[0.75rem] text-mid-gray">Análisis IA + diagnóstico clínico + plan de tratamiento</div>
+            <div className="text-[0.75rem] text-mid-gray leading-relaxed">
+              Radiografía + Análisis IA (6 módulos) + Informe Clarity + Consulta especialista
+            </div>
           </div>
         </div>
 
@@ -27,21 +29,27 @@ const CtaSection = () => {
         <div ref={formRef} className="reveal max-w-[480px] mx-auto">
           <a
             href="/evaluacion"
-            className="inline-block w-full px-5 py-5 bg-foreground text-background border-none rounded-xl font-display text-[1rem] font-bold tracking-[0.05em] uppercase text-center no-underline hover:bg-dark-gray transition-colors"
+            className="inline-block w-full px-5 py-5 bg-accent text-accent-foreground border-none font-display text-[1rem] font-bold tracking-[0.05em] uppercase text-center no-underline hover:opacity-90 transition-colors"
           >
             Comenzar evaluación →
           </a>
           <div className="flex justify-center gap-6 mt-4 flex-wrap">
             <span className="font-mono text-[10px] text-mid-gray">🔒 Pago seguro · Flow.cl</span>
-            <span className="font-mono text-[10px] text-mid-gray">🤖 Análisis IA incluido</span>
-            <span className="font-mono text-[10px] text-mid-gray">🦷 Evaluación completa</span>
+            <span className="font-mono text-[10px] text-mid-gray">🤖 6 módulos IA incluidos</span>
+            <span className="font-mono text-[10px] text-mid-gray">📋 Informe Clarity</span>
           </div>
-        </div>
 
-        <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-12 mt-8">
-          <span className="font-mono text-[0.7rem] tracking-[0.12em] uppercase text-mid-gray">Evidencia + Predicción + Comunicación</span>
-          <span className="font-mono text-[0.7rem] tracking-[0.12em] uppercase text-mid-gray">Informe claro para tu familia</span>
-          <span className="font-mono text-[0.7rem] tracking-[0.12em] uppercase text-mid-gray">No reemplaza al clínico: lo potencia</span>
+          {/* WhatsApp alternative */}
+          <div className="mt-6 pt-6 border-t border-border">
+            <a
+              href="https://wa.me/56974157966?text=Hola%2C%20quiero%20agendar%20mi%20evaluación%20presencial."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[0.8rem] text-mid-gray hover:text-foreground transition-colors no-underline"
+            >
+              ¿Prefieres pagar presencial? <span className="underline">Agenda por WhatsApp →</span>
+            </a>
+          </div>
         </div>
       </div>
     </section>

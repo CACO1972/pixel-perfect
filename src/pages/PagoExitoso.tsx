@@ -109,6 +109,9 @@ const PagoExitoso = () => {
           <p className="text-[0.75rem] text-mid-gray font-display">
             Clínica Miró · Av. Nueva Providencia 2214, Of 189, Providencia · +56 9 7415 7966
           </p>
+          <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent/60 mt-2">
+            Potenciado por HUMANA.AI
+          </p>
         </div>
       </footer>
     </div>

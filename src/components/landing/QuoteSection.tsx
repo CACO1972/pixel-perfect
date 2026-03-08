@@ -10,7 +10,7 @@ const QuoteSection = () => {
           "Cuando un paciente entiende su diagnóstico y sus opciones de tratamiento, confía."
         </p>
         <p className="font-mono text-[0.75rem] tracking-[0.2em] uppercase text-mid-gray">
-          Dr. Carlos Montoya · 30 años de experiencia clínica
+          Dr. Carlos Montoya · 30+ años · 11.000+ implantes documentados
         </p>
       </div>
     </section>

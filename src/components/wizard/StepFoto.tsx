@@ -9,10 +9,16 @@ interface Props {
   back: () => void;
 }
 
-const SEVERITY_COLORS: Record<string, string> = {
-  leve: "text-green-600 bg-green-50 border-green-200",
-  moderado: "text-yellow-700 bg-yellow-50 border-yellow-200",
-  severo: "text-red-600 bg-red-50 border-red-200",
+const SEVERITY_STYLES: Record<string, string> = {
+  leve: "text-status-success bg-status-success/10 border-status-success/30",
+  moderado: "text-status-warning bg-status-warning/10 border-status-warning/30",
+  severo: "text-status-urgent bg-status-urgent/10 border-status-urgent/30",
+};
+
+const STATE_ICON: Record<string, string> = {
+  saludable: "✅",
+  requiere_atencion: "⚠️",
+  urgente: "🔴",
 };
 
 const StepFoto = ({ data, update, next, back }: Props) => {
@@ -56,15 +62,19 @@ const StepFoto = ({ data, update, next, back }: Props) => {
       <h2 className="font-display font-[800] text-[clamp(1.5rem,4vw,2.5rem)] leading-tight mb-2">
         Sube una <span className="text-accent">foto</span> de tu sonrisa
       </h2>
-      <p className="text-mid-gray text-[0.95rem] mb-8">
+      <p className="text-mid-gray text-[0.95rem] mb-2">
         Nuestra IA analizará la imagen para darte una orientación preliminar.
+      </p>
+      {/* HUMANA badge */}
+      <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent mb-8">
+        Análisis SCANDENT · HUMANA.AI
       </p>
 
       {!data.fotoBase64 && !loading && (
         <>
           <button
             onClick={() => fileRef.current?.click()}
-            className="w-full border-2 border-dashed border-border rounded-2xl py-16 flex flex-col items-center gap-3 hover:border-accent/50 transition-colors cursor-pointer"
+            className="w-full border-2 border-dashed border-border py-16 flex flex-col items-center gap-3 hover:border-accent/50 transition-colors cursor-pointer"
           >
             <span className="text-4xl">📸</span>
             <span className="font-display font-semibold text-[0.95rem]">Toca para subir tu foto</span>
@@ -77,7 +87,7 @@ const StepFoto = ({ data, update, next, back }: Props) => {
       {loading && (
         <div className="text-center py-16">
           <div className="w-12 h-12 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-display font-semibold text-[0.95rem]">Analizando con IA...</p>
+          <p className="font-display font-semibold text-[0.95rem]">Analizando con SCANDENT...</p>
           <p className="text-mid-gray text-[0.85rem] mt-1">Esto puede tomar unos segundos</p>
         </div>
       )}
@@ -96,16 +106,16 @@ const StepFoto = ({ data, update, next, back }: Props) => {
         <div className="space-y-6">
           {/* Thumbnail */}
           {data.fotoBase64 && (
-            <div className="w-full rounded-xl overflow-hidden border border-border">
+            <div className="w-full overflow-hidden border border-border">
               <img src={data.fotoBase64} alt="Tu foto" className="w-full h-48 object-cover" />
             </div>
           )}
 
           {/* General result */}
-          <div className="p-6 border border-border rounded-xl bg-secondary/50">
+          <div className="p-6 border border-border bg-secondary/50">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-xl">🤖</span>
-              <span className="font-display font-bold text-[0.95rem] uppercase tracking-wide">Análisis HUMANA.AI</span>
+              <span className="text-xl">{STATE_ICON[analisis.estadoGeneral] || "🤖"}</span>
+              <span className="font-display font-bold text-[0.95rem] uppercase tracking-wide">Análisis SCANDENT · HUMANA.AI</span>
             </div>
             <p className="text-[0.95rem] leading-relaxed">{analisis.mensajeGeneral}</p>
           </div>
@@ -115,7 +125,7 @@ const StepFoto = ({ data, update, next, back }: Props) => {
             <div className="space-y-3">
               <h4 className="font-display font-bold text-[0.85rem] uppercase tracking-wide text-mid-gray">Hallazgos detectados</h4>
               {analisis.hallazgos.map((h, i) => (
-                <div key={i} className={`p-4 border rounded-xl ${SEVERITY_COLORS[h.severidad] || "border-border"}`}>
+                <div key={i} className={`p-4 border ${SEVERITY_STYLES[h.severidad] || "border-border"}`}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-display font-bold text-[0.85rem] uppercase">{h.tipo.replace(/_/g, " ")}</span>
                     <span className="text-[0.7rem] opacity-60">· {h.confianza}</span>
