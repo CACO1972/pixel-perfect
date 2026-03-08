@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 
 const stats = [
   { num: "30+", label: "Años de experiencia" },
-  { num: "15K", label: "Pacientes tratados" },
-  { num: "1ª", label: "Clínica con IA" },
+  { num: "11K+", label: "Implantes documentados" },
+  { num: "6", label: "Módulos IA activos" },
   { num: "98%", label: "Satisfacción" },
 ];
 
@@ -39,32 +39,32 @@ const HeroSection = () => {
       </div>
 
       <div className="container relative z-[2]">
-        {/* Kicker */}
+        {/* HUMANA.AI badge */}
         <div className="inline-flex items-center gap-2 mb-8 md:mb-12">
           <span className="w-1.5 h-1.5 bg-accent rounded-full" style={{ animation: "pulse-dot 2s ease-in-out infinite" }} />
-          <span className="font-mono text-[11px] tracking-[0.15em] uppercase text-mid-gray">
-            Humana.AI · Lanzamiento 16 de marzo · Santiago, Chile
+          <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent">
+            Potenciado por HUMANA.AI · 6 módulos activos
           </span>
         </div>
 
         {/* Title */}
-        <h1 className="font-display font-[900] text-[clamp(3rem,9vw,8rem)] leading-[0.92] tracking-[-0.03em] uppercase mb-6 md:mb-10">
-          Tres dentistas.<br />
-          Tres diagnósticos<br />
-          <em className="not-italic text-accent">distintos.</em>
+        <h1 className="font-serif font-light text-[clamp(2.5rem,7vw,6rem)] leading-[1.05] tracking-[-0.01em] mb-6 md:mb-10">
+          Tu sonrisa merece<br />
+          una decisión<br />
+          <em className="not-italic text-accent">informada.</em>
         </h1>
 
         {/* Subtitle */}
-        <p className="font-serif text-[clamp(1.1rem,2.5vw,1.6rem)] font-light italic text-mid-gray max-w-[620px] leading-relaxed mb-8 md:mb-12">
+        <p className="font-body text-[clamp(1rem,2vw,1.25rem)] font-light text-mid-gray max-w-[620px] leading-relaxed mb-8 md:mb-12">
           HUMANA reduce la incertidumbre del paciente y aumenta su confianza para decidir. Evidencia científica + predicción de escenarios, traducidos a explicaciones claras.
         </p>
 
         {/* CTA */}
         <a
-          href="#form"
-          className="inline-flex items-center gap-3 text-[0.85rem] font-semibold tracking-[0.15em] uppercase text-foreground no-underline px-8 py-4 border-2 border-foreground hover:bg-foreground hover:text-background transition-all group"
+          href="/evaluacion"
+          className="inline-flex items-center gap-3 text-[0.85rem] font-semibold tracking-[0.15em] uppercase text-accent-foreground no-underline px-8 py-4 bg-accent hover:opacity-90 hover:-translate-y-px transition-all group"
         >
-          Reservar mi cupo
+          Comenzar evaluación
           <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
@@ -75,7 +75,7 @@ const HeroSection = () => {
         <div className="flex flex-wrap gap-6 md:gap-16 mt-16 md:mt-24 pt-8 border-t border-border">
           {stats.map((s) => (
             <div key={s.label}>
-              <div className="font-[800] text-[clamp(1.5rem,3vw,2.5rem)] tracking-[-0.02em] leading-none">
+              <div className="font-display font-[800] text-[clamp(1.5rem,3vw,2.5rem)] tracking-[-0.02em] leading-none">
                 {s.num}
               </div>
               <div className="text-[0.7rem] tracking-[0.15em] uppercase text-mid-gray mt-1">

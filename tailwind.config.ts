@@ -57,8 +57,18 @@ export default {
           light: "hsl(var(--gold-light))",
         },
         "off-white": "hsl(var(--off-white))",
+        ivory: "hsl(var(--ivory))",
         "mid-gray": "hsl(var(--mid-gray))",
         "dark-gray": "hsl(var(--dark-gray))",
+        navy: {
+          DEFAULT: "hsl(var(--navy))",
+          light: "hsl(var(--navy-light))",
+        },
+        status: {
+          success: "hsl(var(--status-success))",
+          warning: "hsl(var(--status-warning))",
+          urgent: "hsl(var(--status-urgent))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

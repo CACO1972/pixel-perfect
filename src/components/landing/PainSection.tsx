@@ -5,20 +5,20 @@ const painData = [
   {
     num: "01",
     old: "Diagnósticos confusos",
-    new_text: "Clarity: informe que entiendes",
-    desc: "Tu diagnóstico traducido a lenguaje simple, con analogías claras y opciones de tratamiento comparables.",
+    new_text: "Informe Clarity que entiendes",
+    desc: "Tu diagnóstico traducido a lenguaje simple, con opciones de tratamiento comparables. Para ti y tu familia.",
   },
   {
     num: "02",
     old: "Presupuestos sin contexto",
-    new_text: "Evidencia + predicción de escenarios",
+    new_text: "Escenarios claros antes de decidir",
     desc: "Cada opción tiene datos reales: tasas de éxito, duración estimada y costos transparentes basados en evidencia.",
   },
   {
     num: "03",
     old: "Decisiones a ciegas",
-    new_text: "IA que potencia al clínico",
-    desc: "No reemplaza a tu dentista: le da herramientas para que tú decidas con toda la información. Tu confianza es el objetivo.",
+    new_text: "Soporte a la decisión con IA",
+    desc: "No reemplaza a tu dentista: lo potencia. HUMANA combina evidencia + predicción para que tú decidas informado.",
   },
 ];
 
@@ -56,7 +56,7 @@ const PainSection = () => {
       <div className="container">
         <div ref={headerRef} className="reveal mb-16 md:mb-24">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-accent mb-3">El problema</p>
-          <h2 className="font-display font-[900] text-[clamp(2rem,5vw,4rem)] uppercase tracking-[-0.02em] leading-[0.95]">
+          <h2 className="font-serif font-light text-[clamp(2rem,5vw,3.5rem)] tracking-[-0.01em] leading-[1.05]">
             No más<br />incertidumbre.
           </h2>
         </div>

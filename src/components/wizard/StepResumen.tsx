@@ -133,9 +133,25 @@ const StepResumen = ({ data, back }: Props) => {
         🔒 Pago seguro con Flow.cl · Tarjetas de crédito y débito
       </p>
 
+      <div className="mt-4 text-center">
+        <a
+          href="https://wa.me/56974157966?text=Hola%2C%20quiero%20agendar%20mi%20evaluación%20presencial."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[0.8rem] text-mid-gray hover:text-foreground transition-colors no-underline"
+        >
+          ¿Prefieres pagar presencial? <span className="underline">Agenda por WhatsApp →</span>
+        </a>
+      </div>
+
       <button onClick={back} className="mt-6 text-[0.8rem] text-mid-gray hover:text-foreground transition-colors font-display tracking-wide uppercase block mx-auto">
         ← Volver a editar
       </button>
+
+      {/* HUMANA badge */}
+      <p className="text-center font-mono text-[10px] tracking-[0.15em] uppercase text-accent/60 mt-8">
+        Potenciado por HUMANA.AI · Clínica Miró
+      </p>
     </div>
   );
 };

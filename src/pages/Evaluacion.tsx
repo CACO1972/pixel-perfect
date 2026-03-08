@@ -59,7 +59,7 @@ const Evaluacion = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 py-4 bg-background/95 backdrop-blur-xl border-b border-border/40">
         <div className="container flex items-center justify-between">
-          <a href="/" className="font-display font-[800] text-[1.1rem] tracking-[0.08em] uppercase text-foreground no-underline">
+          <a href="/" className="font-serif font-light text-[1.3rem] tracking-[0.04em] text-foreground no-underline">
             Clínica Miró<span className="text-accent">.</span>
           </a>
           <span className="text-[0.75rem] tracking-[0.12em] uppercase text-mid-gray font-display">
