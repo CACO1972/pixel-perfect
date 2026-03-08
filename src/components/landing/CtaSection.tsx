@@ -77,7 +77,7 @@ const CtaSection = () => {
             </>
           ) : (
             <div className="text-center py-8">
-              <div className="w-[60px] h-[60px] rounded-full bg-green-500/10 border border-green-500/25 flex items-center justify-center mx-auto mb-4 text-2xl">
+              <div className="w-[60px] h-[60px] rounded-full bg-accent/10 border border-accent/25 flex items-center justify-center mx-auto mb-4 text-2xl">
                 ✅
               </div>
               <h3 className="font-serif text-2xl font-normal mb-2">¡Cupo reservado!</h3>
