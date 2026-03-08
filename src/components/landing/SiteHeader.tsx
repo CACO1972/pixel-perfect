@@ -53,7 +53,7 @@ const SiteHeader = () => {
         <div className="md:hidden bg-background/95 backdrop-blur-xl border-t border-border/40 py-6 px-6 flex flex-col gap-4">
           <a href="#humana-tour" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-mid-gray no-underline">HUMANA.AI</a>
           <a href="#programs" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-mid-gray no-underline">Programas</a>
-          <a href="#form" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase px-6 py-3 bg-foreground text-background no-underline text-center">Reservar cupo →</a>
+          <a href="/evaluacion" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase px-6 py-3 bg-foreground text-background no-underline text-center">Comenzar evaluación →</a>
         </div>
       )}
     </header>
