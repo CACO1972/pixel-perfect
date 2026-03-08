@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { analyzeDental, type DentalAnalysis } from "@/lib/api";
 import type { WizardData } from "@/pages/Evaluacion";
+import CameraCapture from "./CameraCapture";
 
 interface Props {
   data: WizardData;
@@ -24,27 +25,16 @@ const STATE_ICON: Record<string, string> = {
 const StepFoto = ({ data, update, next, back }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      setError("La imagen es demasiado grande (máx 10MB).");
-      return;
-    }
-
+  const processImage = async (base64: string) => {
     setError("");
     setLoading(true);
+    setShowCamera(false);
+    update({ fotoBase64: base64 });
 
     try {
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
-
-      update({ fotoBase64: base64 });
       const result = await analyzeDental(base64);
       update({ analisis: result });
     } catch (err) {
@@ -55,33 +45,66 @@ const StepFoto = ({ data, update, next, back }: Props) => {
     }
   };
 
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setError("La imagen es demasiado grande (máx 10MB).");
+      return;
+    }
+
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
+
+    processImage(base64);
+  };
+
   const analisis = data.analisis;
 
   return (
     <div>
       <h2 className="font-display font-[800] text-[clamp(1.5rem,4vw,2.5rem)] leading-tight mb-2">
-        Sube una <span className="text-accent">foto</span> de tu sonrisa
+        Captura tu <span className="text-accent">sonrisa</span>
       </h2>
       <p className="text-mid-gray text-[0.95rem] mb-2">
         Nuestra IA analizará la imagen para darte una orientación preliminar.
       </p>
-      {/* HUMANA badge */}
       <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent mb-8">
         Análisis SCANDENT · HUMANA.AI
       </p>
 
-      {!data.fotoBase64 && !loading && (
-        <>
+      {/* Camera mode */}
+      {showCamera && !loading && (
+        <CameraCapture
+          onCapture={processImage}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+
+      {/* Initial state — choose camera or upload */}
+      {!data.fotoBase64 && !loading && !showCamera && (
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowCamera(true)}
+            className="w-full border-2 border-accent/40 bg-accent/5 py-12 flex flex-col items-center gap-3 hover:border-accent hover:bg-accent/10 transition-all cursor-pointer group"
+          >
+            <span className="text-4xl group-hover:scale-110 transition-transform">📸</span>
+            <span className="font-display font-bold text-[0.95rem]">Abrir cámara profesional</span>
+            <span className="text-[0.75rem] text-mid-gray">Selfie con guías de alineación · Recomendado</span>
+          </button>
+
           <button
             onClick={() => fileRef.current?.click()}
-            className="w-full border-2 border-dashed border-border py-16 flex flex-col items-center gap-3 hover:border-accent/50 transition-colors cursor-pointer"
+            className="w-full border border-border py-4 flex items-center justify-center gap-2 hover:border-accent/30 transition-colors cursor-pointer text-mid-gray hover:text-foreground"
           >
-            <span className="text-4xl">📸</span>
-            <span className="font-display font-semibold text-[0.95rem]">Toca para subir tu foto</span>
-            <span className="text-[0.8rem] text-mid-gray">JPG o PNG · máximo 10 MB</span>
+            <span className="text-lg">🖼️</span>
+            <span className="font-display text-[0.8rem]">O sube una foto existente</span>
           </button>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
-        </>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+        </div>
       )}
 
       {loading && (
@@ -95,23 +118,20 @@ const StepFoto = ({ data, update, next, back }: Props) => {
       {error && (
         <div className="text-center py-8">
           <p className="text-destructive font-medium mb-4">{error}</p>
-          <button onClick={() => { update({ fotoBase64: null, analisis: null }); fileRef.current?.click(); }} className="text-accent underline text-[0.9rem]">
+          <button onClick={() => { update({ fotoBase64: null, analisis: null }); setShowCamera(true); }} className="text-accent underline text-[0.9rem]">
             Intentar de nuevo
           </button>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
         </div>
       )}
 
       {analisis && (
         <div className="space-y-6">
-          {/* Thumbnail */}
           {data.fotoBase64 && (
             <div className="w-full overflow-hidden border border-border">
               <img src={data.fotoBase64} alt="Tu foto" className="w-full h-48 object-cover" />
             </div>
           )}
 
-          {/* General result */}
           <div className="p-6 border border-border bg-secondary/50">
             <div className="flex items-center gap-3 mb-3">
               <span className="text-xl">{STATE_ICON[analisis.estadoGeneral] || "🤖"}</span>
@@ -120,7 +140,6 @@ const StepFoto = ({ data, update, next, back }: Props) => {
             <p className="text-[0.95rem] leading-relaxed">{analisis.mensajeGeneral}</p>
           </div>
 
-          {/* Hallazgos */}
           {analisis.hallazgos.length > 0 && (
             <div className="space-y-3">
               <h4 className="font-display font-bold text-[0.85rem] uppercase tracking-wide text-mid-gray">Hallazgos detectados</h4>
@@ -137,7 +156,6 @@ const StepFoto = ({ data, update, next, back }: Props) => {
             </div>
           )}
 
-          {/* Disclaimer */}
           <p className="text-[0.75rem] text-mid-gray italic leading-relaxed border-l-2 border-accent/30 pl-4">
             Este análisis es orientativo. La evaluación clínica presencial confirmará los hallazgos.
           </p>
