@@ -58,26 +58,6 @@ const RoutesSection = () => {
           {routes.map((route) => (
               <RouteItem key={route.num} route={route} />
           ))}
-                <div className="absolute left-0 top-0 bottom-0 w-0 bg-accent group-hover:w-[3px] transition-all duration-500" />
-                <div className="flex items-baseline gap-4 md:gap-10">
-                  <span className="font-mono text-[0.7rem] tracking-[0.2em] text-accent font-semibold min-w-[2rem]">
-                    {route.num}
-                  </span>
-                  <span className="font-bold text-[clamp(1.2rem,2.5vw,2rem)] tracking-[-0.01em] group-hover:text-accent transition-colors">
-                    {route.title}
-                  </span>
-                </div>
-                <span className="hidden md:block text-[0.85rem] text-mid-gray max-w-[300px] text-right leading-relaxed">
-                  {route.desc}
-                </span>
-                <svg className="w-5 h-5 text-mid-gray group-hover:text-accent group-hover:translate-x-1 transition-all ml-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
-              </a>
-            );
-          })}
-        </div>
       </div>
     </section>
   );
