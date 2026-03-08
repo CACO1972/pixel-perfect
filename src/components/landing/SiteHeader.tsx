@@ -31,8 +31,8 @@ const SiteHeader = () => {
           <a href="#programs" className="text-[0.8rem] tracking-[0.12em] uppercase text-mid-gray no-underline hover:text-foreground transition-colors">
             Programas
           </a>
-          <a href="#form" className="text-[0.75rem] tracking-[0.12em] uppercase px-6 py-2.5 bg-foreground text-background no-underline hover:bg-dark-gray hover:-translate-y-px transition-all">
-            Reservar cupo →
+          <a href="/evaluacion" className="text-[0.75rem] tracking-[0.12em] uppercase px-6 py-2.5 bg-foreground text-background no-underline hover:bg-dark-gray hover:-translate-y-px transition-all">
+            Comenzar evaluación →
           </a>
         </nav>
 
