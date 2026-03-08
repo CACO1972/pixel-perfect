@@ -58,6 +58,7 @@ const RoutesSection = () => {
           {routes.map((route) => (
               <RouteItem key={route.num} route={route} />
           ))}
+        </div>
       </div>
     </section>
   );
