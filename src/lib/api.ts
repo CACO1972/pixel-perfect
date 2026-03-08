@@ -33,6 +33,7 @@ export const createPayment = (data: {
   commerceOrder: string;
   nombre: string;
   telefono: string;
+  urlReturn?: string;
 }) => post<FlowPaymentResponse>("flow-create-payment", data);
 
 // Dental photo analysis
