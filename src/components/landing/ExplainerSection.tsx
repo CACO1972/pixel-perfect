@@ -4,7 +4,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 const steps = [
   { num: "01", text: "Responde el cuestionario inteligente (3 min)" },
   { num: "02", text: "La IA genera tu informe Clarity personalizado" },
-  { num: "03", text: "Agenda tu evaluación con el Dr. Montoya" },
+  { num: "03", text: "Agenda tu evaluación con el equipo de Clínica Miró" },
   { num: "04", text: "Llegas preparado. Sin repetir nada." },
 ];
 

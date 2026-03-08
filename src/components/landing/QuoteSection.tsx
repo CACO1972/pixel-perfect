@@ -7,10 +7,10 @@ const QuoteSection = () => {
     <section ref={ref} className="reveal py-32 md:py-56 text-center">
       <div className="container">
         <p className="font-serif text-[clamp(1.5rem,4vw,3rem)] font-light italic leading-snug text-dark-gray max-w-[800px] mx-auto mb-8">
-          "Cuando un paciente entiende su diagnóstico y sus opciones de tratamiento, confía."
+          "Cuando un paciente entiende sus opciones de tratamiento, toma decisiones con confianza."
         </p>
         <p className="font-mono text-[0.75rem] tracking-[0.2em] uppercase text-mid-gray">
-          Dr. Carlos Montoya · 30+ años · 11.000+ implantes documentados
+          Equipo Clínica Miró · 30+ años de experiencia · 11.000+ implantes documentados
         </p>
       </div>
     </section>
