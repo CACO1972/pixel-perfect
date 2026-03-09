@@ -36,7 +36,7 @@ const INITIAL: WizardData = {
   rut: "",
 };
 
-const STEP_LABELS = ["Motivo", "Zona", "Síntomas", "Foto IA", "Ruta", "Financiamiento", "Tus datos"];
+const STEP_LABELS = ["Motivo", "Zona", "Síntomas", "Foto IA", "Ruta", "Financiamiento", "Tus datos", "Confirmar"];
 
 const Evaluacion = () => {
   const [step, setStep] = useState(0);
