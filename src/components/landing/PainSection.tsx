@@ -4,21 +4,21 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 const painData = [
   {
     num: "01",
-    old: "Diagnósticos confusos",
-    new_text: "Informe Clarity que entiendes",
-    desc: "Tu diagnóstico traducido a lenguaje simple, con opciones de tratamiento comparables. Para ti y tu familia.",
+    old: "Tres dentistas, tres presupuestos",
+    new_text: "Un diagnóstico que puedes leer",
+    desc: "La variabilidad diagnóstica en odontología llega al 40%. En Miró el criterio es siempre el mismo: datos, no intuición del día.",
   },
   {
     num: "02",
-    old: "Presupuestos sin contexto",
-    new_text: "Escenarios claros antes de decidir",
-    desc: "Cada opción tiene datos reales: tasas de éxito, duración estimada y costos transparentes basados en evidencia.",
+    old: ""¿Por qué tanto? ¿Es necesario?"",
+    new_text: "Alternativas escritas, con evidencia",
+    desc: "El documento Explica detalla cada alternativa: qué implica, qué riesgos tiene, cuánto cuesta. Te lo llevas. Sin presión.",
   },
   {
     num: "03",
-    old: "Decisiones a ciegas",
-    new_text: "Soporte a la decisión con IA",
-    desc: "No reemplaza a tu dentista: lo potencia. HUMANA combina evidencia + predicción para que tú decidas informado.",
+    old: ""Me dijeron que era urgente"",
+    new_text: "La urgencia real siempre se documenta",
+    desc: "Radiografía aumentada, overlay visual, firma del clínico. Si hay urgencia, verás exactamente por qué. Sin miedo, con evidencia.",
   },
 ];
 
@@ -57,7 +57,7 @@ const PainSection = () => {
         <div ref={headerRef} className="reveal mb-16 md:mb-24">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-accent mb-3">El problema</p>
           <h2 className="font-serif font-light text-[clamp(2rem,5vw,3.5rem)] tracking-[-0.01em] leading-[1.05]">
-            No más<br />incertidumbre.
+            El que ya fue<br />y no le creyeron.
           </h2>
         </div>
 

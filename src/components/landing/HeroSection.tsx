@@ -49,14 +49,14 @@ const HeroSection = () => {
 
         {/* Title */}
         <h1 className="font-serif font-light text-[clamp(2.5rem,7vw,6rem)] leading-[1.05] tracking-[-0.01em] mb-6 md:mb-10">
-          Tu sonrisa merece<br />
-          una decisión<br />
-          <em className="not-italic text-accent">informada.</em>
+          Si entiendes<br />
+          lo que tienes,<br />
+          <em className="not-italic text-accent">confías.</em>
         </h1>
 
         {/* Subtitle */}
         <p className="font-body text-[clamp(1rem,2vw,1.25rem)] font-light text-mid-gray max-w-[620px] leading-relaxed mb-8 md:mb-12">
-          HUMANA reduce la incertidumbre del paciente y aumenta su confianza para decidir. Evidencia científica + predicción de escenarios, traducidos a explicaciones claras.
+          La mayoría llega con un presupuesto de otra clínica que no entiende. Aquí el diagnóstico se explica, se escribe y se documenta. Tú decides.
         </p>
 
         {/* CTA */}

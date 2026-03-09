@@ -8,10 +8,10 @@ const CtaSection = () => {
     <section id="form" className="py-24 md:py-40 bg-secondary text-center">
       <div className="container">
         <h2 ref={headlineRef} className="reveal font-serif font-light text-[clamp(2rem,5vw,4rem)] tracking-[-0.01em] leading-[1.05] mb-8">
-          Tu evaluación,<br />potenciada por <span className="text-accent">IA.</span>
+          Trae tu presupuesto.<br />Lo revisamos <span className="text-accent">juntos.</span>
         </h2>
         <p className="font-body text-[clamp(1rem,2vw,1.2rem)] text-mid-gray mb-12 max-w-lg mx-auto">
-          Evidencia científica + predicción de escenarios. Traducidos a un Informe Clarity para ti y tu familia.
+          Sin compromiso. Sin presión. Sales con un diagnóstico escrito, alternativas claras y un presupuesto que puedes comparar.
         </p>
 
         {/* Price highlight */}
@@ -20,7 +20,7 @@ const CtaSection = () => {
           <div className="text-left">
             <div className="text-[0.85rem] font-semibold">Evaluación Dental Premium</div>
             <div className="text-[0.75rem] text-mid-gray leading-relaxed">
-              Radiografía + Análisis IA (6 módulos) + Informe Clarity + Consulta especialista
+              90 min · Radiografía + IA + documento Explica + alternativas A/B/C escritas
             </div>
           </div>
         </div>
@@ -31,7 +31,7 @@ const CtaSection = () => {
             href="/evaluacion"
             className="inline-block w-full px-5 py-5 bg-accent text-accent-foreground border-none font-display text-[1rem] font-bold tracking-[0.05em] uppercase text-center no-underline hover:opacity-90 transition-colors"
           >
-            Comenzar evaluación →
+            Comenzar mi evaluación →
           </a>
           <div className="flex justify-center gap-6 mt-4 flex-wrap">
             <span className="font-mono text-[10px] text-mid-gray">🔒 Pago seguro · Flow.cl</span>
@@ -42,12 +42,12 @@ const CtaSection = () => {
           {/* WhatsApp alternative */}
           <div className="mt-6 pt-6 border-t border-border">
             <a
-              href="https://wa.me/56974157966?text=Hola%2C%20quiero%20agendar%20mi%20evaluación%20presencial."
+              href="https://wa.me/56974157966?text=Hola%2C%20tengo%20un%20presupuesto%20de%20otra%20cl%C3%ADnica%20y%20quiero%20una%20segunda%20opini%C3%B3n."
               target="_blank"
               rel="noopener noreferrer"
               className="text-[0.8rem] text-mid-gray hover:text-foreground transition-colors no-underline"
             >
-              ¿Prefieres pagar presencial? <span className="underline">Agenda por WhatsApp →</span>
+              ¿Tienes un presupuesto de otra clínica? <span className="underline">Segunda opinión sin costo →</span>
             </a>
           </div>
         </div>
