@@ -10,7 +10,7 @@ const painData = [
   },
   {
     num: "02",
-    old: ""¿Por qué tanto? ¿Es necesario?"",
+    old: "\u201C¿Por qué tanto? ¿Es necesario?\u201D",
     new_text: "Alternativas escritas, con evidencia",
     desc: "El documento Explica detalla cada alternativa: qué implica, qué riesgos tiene, cuánto cuesta. Te lo llevas. Sin presión.",
   },
