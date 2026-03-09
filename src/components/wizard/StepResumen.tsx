@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { WizardData } from "@/pages/Evaluacion";
-import { createPayment, notifyStaff, dentalinkProxy } from "@/lib/api";
+import { createPayment } from "@/lib/api";
 
 const MOTIVO_LABELS: Record<string, string> = {
   faltan_dientes: "Me faltan dientes",
@@ -28,6 +28,8 @@ const SINTOMA_LABELS: Record<string, string> = {
   sin_sintomas: "Sin síntomas",
 };
 
+const PAYMENT_STORAGE_KEY = "miro_payment_pending";
+
 interface Props {
   data: WizardData;
   back: () => void;
@@ -42,57 +44,59 @@ const StepResumen = ({ data, back }: Props) => {
     setError("");
 
     try {
-      // 1. Create patient in Dentalink
-      const [nombre, ...apellidoParts] = data.nombre.trim().split(" ");
-      const apellido = apellidoParts.join(" ") || nombre;
-      try {
-        await dentalinkProxy("create_patient", {
-          nombre,
-          apellido,
-          telefono: data.whatsapp,
-          email: data.email,
-          ...(data.rut ? { rut: data.rut } : {}),
-        });
-      } catch (e) {
-        console.warn("Dentalink create_patient failed (non-blocking):", e);
+      const nombre = data.nombre.trim();
+      const email = data.email.trim().toLowerCase();
+      const telefono = data.whatsapp.trim().replace(/\s+/g, "");
+
+      if (!nombre || !email || !telefono) {
+        setError("Completa nombre, WhatsApp y email antes de pagar.");
+        setLoading(false);
+        return;
       }
 
-      // 2. Notify staff via WhatsApp
-      const estadoIA = data.analisis?.estadoGeneral || "sin análisis";
-      const staffMsg = `🦷 NUEVA EVALUACIÓN\n\n👤 ${data.nombre}\n📱 ${data.whatsapp}\n📧 ${data.email}\n${data.rut ? `🪪 ${data.rut}\n` : ""}\n📋 Motivo: ${MOTIVO_LABELS[data.motivo] || data.motivo}\n📍 Zona: ${ZONA_LABELS[data.zona] || data.zona}\n🩺 Síntomas: ${data.sintomas.map((s) => SINTOMA_LABELS[s] || s).join(", ")}\n🤖 IA: ${estadoIA}\n\n💳 Redirigido a pagar $49.000`;
-
-      try {
-        await notifyStaff(staffMsg);
-      } catch (e) {
-        console.warn("WhatsApp notify failed (non-blocking):", e);
+      if (/@(test\.com|example\.com)$/i.test(email)) {
+        setError("Usa un email real para continuar con el pago.");
+        setLoading(false);
+        return;
       }
 
-      // 3. Save patient data for post-payment WhatsApp
       const orderId = `eval-${Date.now()}`;
-      sessionStorage.setItem("miro_patient", JSON.stringify({
-        nombre: data.nombre,
-        whatsapp: data.whatsapp,
-        email: data.email,
-        orderId,
-      }));
-
-      // 4. Create payment with return URL
       const returnUrl = `${window.location.origin}/pago-exitoso`;
+
       const paymentRes = await createPayment({
-        email: data.email,
+        email,
         amount: 49000,
         subject: "Evaluación Dental Premium - Clínica Miró",
         commerceOrder: orderId,
-        nombre: data.nombre,
-        telefono: data.whatsapp,
+        nombre,
+        telefono,
         urlReturn: returnUrl,
       });
 
-      // 5. Redirect to Flow.cl
-      window.location.href = `${paymentRes.url}?token=${paymentRes.token}`;
+      sessionStorage.setItem(
+        PAYMENT_STORAGE_KEY,
+        JSON.stringify({
+          nombre,
+          whatsapp: telefono,
+          email,
+          rut: data.rut?.trim() || "",
+          motivo: data.motivo,
+          zona: data.zona,
+          sintomas: data.sintomas,
+          analisisEstado: data.analisis?.estadoGeneral || "sin análisis",
+          orderId,
+        }),
+      );
+
+      const separator = paymentRes.url.includes("?") ? "&" : "?";
+      window.location.href = `${paymentRes.url}${separator}token=${encodeURIComponent(paymentRes.token)}`;
     } catch (err) {
-      console.error("Payment error:", err);
-      setError("Error al procesar el pago. Intenta de nuevo.");
+      const message = err instanceof Error ? err.message : "";
+      if (message.includes("userEmail")) {
+        setError("El email ingresado no fue aceptado por el medio de pago. Usa un correo real (ej: Gmail/Outlook).");
+      } else {
+        setError("Error al procesar el pago. Intenta de nuevo.");
+      }
       setLoading(false);
     }
   };

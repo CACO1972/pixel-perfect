@@ -1,38 +1,101 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { sendWhatsApp } from "@/lib/api";
+import { sendWhatsApp, notifyStaff, dentalinkProxy } from "@/lib/api";
+
+const PAYMENT_STORAGE_KEY = "miro_payment_pending";
+
+const MOTIVO_LABELS: Record<string, string> = {
+  faltan_dientes: "Me faltan dientes",
+  mejorar_sonrisa: "Mejorar sonrisa",
+  dolor: "Dolor o molestia",
+  ortodoncia: "Ortodoncia",
+  segunda_opinion: "Segunda opinión",
+  preventivo: "Chequeo preventivo",
+};
+
+const ZONA_LABELS: Record<string, string> = {
+  arriba_derecha: "Arriba derecha",
+  arriba_izquierda: "Arriba izquierda",
+  abajo_derecha: "Abajo derecha",
+  abajo_izquierda: "Abajo izquierda",
+  general: "Toda la boca",
+};
+
+const SINTOMA_LABELS: Record<string, string> = {
+  dolor_morder: "Dolor al morder",
+  encias_sangrantes: "Encías sangrantes",
+  sensibilidad: "Sensibilidad",
+  dientes_flojos: "Dientes flojos",
+  mal_aliento: "Mal aliento",
+  sin_sintomas: "Sin síntomas",
+};
+
+interface PendingPaymentData {
+  nombre: string;
+  whatsapp: string;
+  email: string;
+  rut?: string;
+  motivo: string;
+  zona: string;
+  sintomas: string[];
+  analisisEstado: string;
+  orderId: string;
+}
 
 const PagoExitoso = () => {
   const [searchParams] = useSearchParams();
   const status = searchParams.get("status");
-  const isSuccess = status === "success" || !status;
+  const token = searchParams.get("token");
   const whatsappSent = useRef(false);
   const [patientName, setPatientName] = useState("");
 
-  // Send WhatsApp confirmation on success
-  useEffect(() => {
-    if (!isSuccess || whatsappSent.current) return;
+  const pendingRaw = useMemo(() => {
+    try {
+      return sessionStorage.getItem(PAYMENT_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  }, []);
 
-    const raw = sessionStorage.getItem("miro_patient");
-    if (!raw) return;
+  const isSuccess = status === "success" || (!!token && status !== "failed" && status !== "error" && !!pendingRaw);
+
+  // Post-payment actions only after successful return
+  useEffect(() => {
+    if (!isSuccess || whatsappSent.current || !pendingRaw) return;
 
     try {
-      const patient = JSON.parse(raw);
-      setPatientName(patient.nombre || "");
+      const patient = JSON.parse(pendingRaw) as PendingPaymentData;
+      if (!patient?.nombre || !patient?.whatsapp || !patient?.email) return;
+
+      setPatientName(patient.nombre);
       whatsappSent.current = true;
+
+      const [nombre, ...apellidoParts] = patient.nombre.trim().split(" ");
+      const apellido = apellidoParts.join(" ") || nombre;
+
+      dentalinkProxy("create_patient", {
+        nombre,
+        apellido,
+        telefono: patient.whatsapp,
+        email: patient.email,
+        ...(patient.rut ? { rut: patient.rut } : {}),
+      }).catch((err) => console.warn("Dentalink create_patient failed:", err));
+
+      const staffMsg = `✅ PAGO CONFIRMADO — EVALUACIÓN\n\n👤 ${patient.nombre}\n📱 ${patient.whatsapp}\n📧 ${patient.email}\n${patient.rut ? `🪪 ${patient.rut}\n` : ""}📋 Motivo: ${MOTIVO_LABELS[patient.motivo] || patient.motivo}\n📍 Zona: ${ZONA_LABELS[patient.zona] || patient.zona}\n🩺 Síntomas: ${(patient.sintomas || []).map((s) => SINTOMA_LABELS[s] || s).join(", ")}\n🤖 IA: ${patient.analisisEstado || "sin análisis"}\n🧾 Orden: ${patient.orderId}`;
+
+      notifyStaff(staffMsg).catch((err) => console.warn("WhatsApp notify failed:", err));
 
       const msg = `✅ ¡Hola ${patient.nombre}! Tu Evaluación Dental Premium en Clínica Miró está confirmada.\n\n📋 ID: ${patient.orderId}\n\n📅 Próximo paso: agenda tu hora:\n🔗 https://ff.healthatom.io/41knMr\n\nO escríbenos al +56 9 3557 2986\n\n📍 Av. Nueva Providencia 2214, Of 189, Providencia\n⏰ Llega 15 min antes\n\nPotenciado por HUMANA.AI · Clínica Miró`;
 
       sendWhatsApp(patient.whatsapp, msg).catch((err) =>
-        console.warn("WhatsApp confirmation failed:", err)
+        console.warn("WhatsApp confirmation failed:", err),
       );
 
-      // Clean up
-      sessionStorage.removeItem("miro_patient");
+      sessionStorage.removeItem(PAYMENT_STORAGE_KEY);
     } catch (e) {
-      console.warn("Failed to parse patient data:", e);
+      console.warn("Failed to parse payment data:", e);
     }
-  }, [isSuccess]);
+  }, [isSuccess, pendingRaw]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

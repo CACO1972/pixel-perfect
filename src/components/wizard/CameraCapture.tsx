@@ -13,27 +13,65 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [cameraError, setCameraError] = useState("");
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 1280 } },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => setReady(true);
-      }
-    } catch {
-      setCameraError("No se pudo acceder a la cámara. Verifica los permisos.");
-    }
-  }, []);
+  const [cameraStarting, setCameraStarting] = useState(false);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
   }, []);
+
+  const startCamera = useCallback(async () => {
+    setCameraError("");
+    setReady(false);
+    setCameraStarting(true);
+    stopCamera();
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Tu navegador no permite usar cámara. Sube una foto existente.");
+      setCameraStarting(false);
+      return;
+    }
+
+    const constraintOptions: MediaStreamConstraints[] = [
+      {
+        video: { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      },
+      { video: true, audio: false },
+    ];
+
+    try {
+      let stream: MediaStream | null = null;
+
+      for (const constraints of constraintOptions) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch {
+          // Try next constraint profile
+        }
+      }
+
+      if (!stream) {
+        throw new Error("camera_unavailable");
+      }
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(() => {
+            // ignore play interruption
+          });
+          setReady(true);
+          setCameraStarting(false);
+        };
+      }
+    } catch {
+      setCameraError("No se pudo acceder a la cámara en este dispositivo. Puedes subir una foto existente.");
+      setCameraStarting(false);
+    }
+  }, [stopCamera]);
 
   useEffect(() => {
     startCamera();
@@ -81,9 +119,22 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
 
   if (cameraError) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive font-medium mb-4">{cameraError}</p>
-        <button onClick={onClose} className="text-accent underline text-[0.9rem]">Volver</button>
+      <div className="text-center py-12 space-y-4">
+        <p className="text-destructive font-medium">{cameraError}</p>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={startCamera}
+            className="px-5 py-2 border border-border rounded-lg text-[0.85rem] font-display hover:border-accent/40 transition-colors"
+          >
+            Reintentar cámara
+          </button>
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-foreground text-background rounded-lg text-[0.85rem] font-display hover:bg-dark-gray transition-colors"
+          >
+            Subir foto existente
+          </button>
+        </div>
       </div>
     );
   }
@@ -234,11 +285,13 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
         )}
 
         {/* Loading skeleton */}
-        {!ready && (
+        {!ready && !cameraError && (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary">
             <div className="text-center">
               <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="font-display text-[0.8rem] text-mid-gray">Iniciando cámara...</p>
+              <p className="font-display text-[0.8rem] text-mid-gray">
+                {cameraStarting ? "Iniciando cámara..." : "Preparando captura..."}
+              </p>
             </div>
           </div>
         )}
