@@ -13,27 +13,65 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [cameraError, setCameraError] = useState("");
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 1280 } },
-        audio: false,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => setReady(true);
-      }
-    } catch {
-      setCameraError("No se pudo acceder a la cámara. Verifica los permisos.");
-    }
-  }, []);
+  const [cameraStarting, setCameraStarting] = useState(false);
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
   }, []);
+
+  const startCamera = useCallback(async () => {
+    setCameraError("");
+    setReady(false);
+    setCameraStarting(true);
+    stopCamera();
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Tu navegador no permite usar cámara. Sube una foto existente.");
+      setCameraStarting(false);
+      return;
+    }
+
+    const constraintOptions: MediaStreamConstraints[] = [
+      {
+        video: { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      },
+      { video: true, audio: false },
+    ];
+
+    try {
+      let stream: MediaStream | null = null;
+
+      for (const constraints of constraintOptions) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          break;
+        } catch {
+          // Try next constraint profile
+        }
+      }
+
+      if (!stream) {
+        throw new Error("camera_unavailable");
+      }
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play().catch(() => {
+            // ignore play interruption
+          });
+          setReady(true);
+          setCameraStarting(false);
+        };
+      }
+    } catch {
+      setCameraError("No se pudo acceder a la cámara en este dispositivo. Puedes subir una foto existente.");
+      setCameraStarting(false);
+    }
+  }, [stopCamera]);
 
   useEffect(() => {
     startCamera();
