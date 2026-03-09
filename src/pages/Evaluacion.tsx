@@ -58,6 +58,7 @@ const Evaluacion = () => {
     <StepRuta key={4} data={data} update={update} next={next} back={back} />,
     <StepFinanciamiento key={5} data={data} update={update} next={next} back={back} />,
     <StepDatos key={6} data={data} update={update} next={next} back={back} />,
+    <StepResumen key={7} data={data} back={back} />,
   ];
 
   return (
