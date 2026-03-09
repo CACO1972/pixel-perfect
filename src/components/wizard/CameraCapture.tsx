@@ -119,9 +119,22 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
 
   if (cameraError) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive font-medium mb-4">{cameraError}</p>
-        <button onClick={onClose} className="text-accent underline text-[0.9rem]">Volver</button>
+      <div className="text-center py-12 space-y-4">
+        <p className="text-destructive font-medium">{cameraError}</p>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={startCamera}
+            className="px-5 py-2 border border-border rounded-lg text-[0.85rem] font-display hover:border-accent/40 transition-colors"
+          >
+            Reintentar cámara
+          </button>
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-foreground text-background rounded-lg text-[0.85rem] font-display hover:bg-dark-gray transition-colors"
+          >
+            Subir foto existente
+          </button>
+        </div>
       </div>
     );
   }
