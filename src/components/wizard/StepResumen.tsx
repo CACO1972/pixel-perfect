@@ -120,6 +120,9 @@ const StepResumen = ({ data, back }: Props) => {
         <SummaryRow label="Motivo" value={MOTIVO_LABELS[data.motivo] || data.motivo} />
         <SummaryRow label="Zona" value={ZONA_LABELS[data.zona] || data.zona} />
         <SummaryRow label="Síntomas" value={data.sintomas.map((s) => SINTOMA_LABELS[s] || s).join(", ")} />
+        {data.programaRecomendado && (
+          <SummaryRow label="Programa" value={PROGRAMA_LABELS[data.programaRecomendado] || data.programaRecomendado} />
+        )}
         <SummaryRow label="Análisis IA" value={
           data.analisis
             ? `${data.analisis.estadoGeneral === "saludable" ? "✅" : data.analisis.estadoGeneral === "urgente" ? "🔴" : "⚠️"} ${data.analisis.estadoGeneral} — ${data.analisis.hallazgos.length} hallazgo(s)`
