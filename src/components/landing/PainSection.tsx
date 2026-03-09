@@ -16,7 +16,7 @@ const painData = [
   },
   {
     num: "03",
-    old: ""Me dijeron que era urgente"",
+    old: "\u201CMe dijeron que era urgente\u201D",
     new_text: "La urgencia real siempre se documenta",
     desc: "Radiografía aumentada, overlay visual, firma del clínico. Si hay urgencia, verás exactamente por qué. Sin miedo, con evidencia.",
   },
