@@ -28,6 +28,13 @@ const SINTOMA_LABELS: Record<string, string> = {
   sin_sintomas: "Sin síntomas",
 };
 
+const PROGRAMA_LABELS: Record<string, string> = {
+  miro_one: "MIRO ONE · Implantes",
+  revive: "REVIVE · Rehabilitación",
+  align: "ALIGN · Ortodoncia",
+  zero_caries: "ZERO CARIES · Prevención",
+};
+
 const PAYMENT_STORAGE_KEY = "miro_payment_pending";
 
 interface Props {
