@@ -4,6 +4,8 @@ import StepMotivo from "@/components/wizard/StepMotivo";
 import StepZona from "@/components/wizard/StepZona";
 import StepSintomas from "@/components/wizard/StepSintomas";
 import StepFoto from "@/components/wizard/StepFoto";
+import StepRuta from "@/components/wizard/StepRuta";
+import StepFinanciamiento from "@/components/wizard/StepFinanciamiento";
 import StepDatos from "@/components/wizard/StepDatos";
 import StepResumen from "@/components/wizard/StepResumen";
 import type { DentalAnalysis } from "@/lib/api";
@@ -14,6 +16,7 @@ export interface WizardData {
   sintomas: string[];
   fotoBase64: string | null;
   analisis: DentalAnalysis | null;
+  programaRecomendado: string;
   nombre: string;
   whatsapp: string;
   email: string;
@@ -26,13 +29,14 @@ const INITIAL: WizardData = {
   sintomas: [],
   fotoBase64: null,
   analisis: null,
+  programaRecomendado: "",
   nombre: "",
   whatsapp: "",
   email: "",
   rut: "",
 };
 
-const STEP_LABELS = ["Motivo", "Zona", "Síntomas", "Foto IA", "Tus datos", "Confirmar"];
+const STEP_LABELS = ["Motivo", "Zona", "Síntomas", "Foto IA", "Ruta", "Financiamiento", "Tus datos", "Confirmar"];
 
 const Evaluacion = () => {
   const [step, setStep] = useState(0);
@@ -42,7 +46,8 @@ const Evaluacion = () => {
   const update = (partial: Partial<WizardData>) =>
     setData((prev) => ({ ...prev, ...partial }));
 
-  const next = () => setStep((s) => Math.min(s + 1, 5));
+  const totalSteps = STEP_LABELS.length;
+  const next = () => setStep((s) => Math.min(s + 1, totalSteps - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const stepComponents = [
@@ -50,8 +55,10 @@ const Evaluacion = () => {
     <StepZona key={1} data={data} update={update} next={next} back={back} />,
     <StepSintomas key={2} data={data} update={update} next={next} back={back} />,
     <StepFoto key={3} data={data} update={update} next={next} back={back} />,
-    <StepDatos key={4} data={data} update={update} next={next} back={back} />,
-    <StepResumen key={5} data={data} back={back} />,
+    <StepRuta key={4} data={data} update={update} next={next} back={back} />,
+    <StepFinanciamiento key={5} data={data} update={update} next={next} back={back} />,
+    <StepDatos key={6} data={data} update={update} next={next} back={back} />,
+    <StepResumen key={7} data={data} back={back} />,
   ];
 
   return (
@@ -83,7 +90,7 @@ const Evaluacion = () => {
           </div>
           <div className="flex justify-between mb-10">
             <span className="text-[0.7rem] text-mid-gray font-display tracking-wide uppercase">
-              Paso {step + 1} de 6 — {STEP_LABELS[step]}
+              Paso {step + 1} de {totalSteps} — {STEP_LABELS[step]}
             </span>
           </div>
 
