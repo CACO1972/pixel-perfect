@@ -10,13 +10,13 @@ const painData = [
   },
   {
     num: "02",
-    old: ""¿Por qué tanto? ¿Es necesario?"",
+    old: "\u201C¿Por qué tanto? ¿Es necesario?\u201D",
     new_text: "Alternativas escritas, con evidencia",
     desc: "El documento Explica detalla cada alternativa: qué implica, qué riesgos tiene, cuánto cuesta. Te lo llevas. Sin presión.",
   },
   {
     num: "03",
-    old: ""Me dijeron que era urgente"",
+    old: "\u201CMe dijeron que era urgente\u201D",
     new_text: "La urgencia real siempre se documenta",
     desc: "Radiografía aumentada, overlay visual, firma del clínico. Si hay urgencia, verás exactamente por qué. Sin miedo, con evidencia.",
   },
