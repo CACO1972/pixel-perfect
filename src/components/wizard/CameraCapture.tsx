@@ -285,11 +285,13 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
         )}
 
         {/* Loading skeleton */}
-        {!ready && (
+        {!ready && !cameraError && (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary">
             <div className="text-center">
               <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-              <p className="font-display text-[0.8rem] text-mid-gray">Iniciando cámara...</p>
+              <p className="font-display text-[0.8rem] text-mid-gray">
+                {cameraStarting ? "Iniciando cámara..." : "Preparando captura..."}
+              </p>
             </div>
           </div>
         )}
