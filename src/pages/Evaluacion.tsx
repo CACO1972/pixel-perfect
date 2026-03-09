@@ -8,7 +8,6 @@ import StepRuta from "@/components/wizard/StepRuta";
 import StepFinanciamiento from "@/components/wizard/StepFinanciamiento";
 import StepDatos from "@/components/wizard/StepDatos";
 import StepResumen from "@/components/wizard/StepResumen";
-import StepResumen from "@/components/wizard/StepResumen";
 import type { DentalAnalysis } from "@/lib/api";
 
 export interface WizardData {
