@@ -112,13 +112,17 @@ const StepDatos = ({ data, update, next, back }: Props) => {
         <div>
           <input
             type="text"
-            placeholder="RUT (opcional)"
+            placeholder="RUT *"
             value={data.rut}
-            onChange={(e) => update({ rut: e.target.value })}
+            onChange={(e) => update({ rut: formatRut(e.target.value) })}
             className={inputClass("rut")}
             maxLength={12}
           />
-          <p className="text-[0.75rem] text-mid-gray mt-1">Formato: 12345678-9</p>
+          {errors.rut ? (
+            <p className="text-destructive text-[0.75rem] mt-1">{errors.rut}</p>
+          ) : (
+            <p className="text-[0.75rem] text-mid-gray mt-1">Con tu RUT accederás a tu portal privado de paciente</p>
+          )}
         </div>
 
         <div className="flex items-center justify-between pt-4">
