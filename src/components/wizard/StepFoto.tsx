@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { analyzeDental, type DentalAnalysis } from "@/lib/api";
+import { analyzeDental, type DentalAnalysis, type DentalHallazgo } from "@/lib/api";
 import type { WizardData } from "@/pages/Evaluacion";
 import CameraCapture from "./CameraCapture";
 
@@ -16,11 +16,56 @@ const SEVERITY_STYLES: Record<string, string> = {
   severo: "text-status-urgent bg-status-urgent/10 border-status-urgent/30",
 };
 
+const SEVERITY_MARKER_COLORS: Record<string, string> = {
+  leve: "bg-status-success border-status-success",
+  moderado: "bg-status-warning border-status-warning",
+  severo: "bg-status-urgent border-status-urgent",
+};
+
 const STATE_ICON: Record<string, string> = {
   saludable: "✅",
   requiere_atencion: "⚠️",
   urgente: "🔴",
 };
+
+// Map dental location keywords to approximate % coordinates on a frontal smile photo
+// The photo is a square selfie centered on the face/smile
+const LOCATION_MAP: { keywords: string[]; x: number; y: number }[] = [
+  // Upper teeth
+  { keywords: ["incisivo superior", "incisivos superiores", "dientes superiores", "superiores anteriores", "centrales superiores"], x: 50, y: 52 },
+  { keywords: ["lateral superior derecho", "superior derecho"], x: 40, y: 52 },
+  { keywords: ["lateral superior izquierdo", "superior izquierdo"], x: 60, y: 52 },
+  { keywords: ["canino superior derecho"], x: 35, y: 54 },
+  { keywords: ["canino superior izquierdo"], x: 65, y: 54 },
+  { keywords: ["premolar superior", "premolares superiores"], x: 30, y: 55 },
+  { keywords: ["molar superior", "molares superiores"], x: 25, y: 57 },
+  // Lower teeth
+  { keywords: ["incisivo inferior", "incisivos inferiores", "dientes inferiores", "inferiores anteriores", "centrales inferiores", "anteroinferiores", "anteroinferior"], x: 50, y: 62 },
+  { keywords: ["lateral inferior derecho", "inferior derecho"], x: 43, y: 62 },
+  { keywords: ["lateral inferior izquierdo", "inferior izquierdo"], x: 57, y: 62 },
+  { keywords: ["canino inferior derecho"], x: 37, y: 63 },
+  { keywords: ["canino inferior izquierdo"], x: 63, y: 63 },
+  { keywords: ["premolar inferior", "premolares inferiores"], x: 32, y: 64 },
+  { keywords: ["molar inferior", "molares inferiores"], x: 27, y: 65 },
+  // General zones
+  { keywords: ["encía", "encias", "gingival", "encías"], x: 50, y: 48 },
+  { keywords: ["diastema", "espaciamiento", "espacio"], x: 50, y: 53 },
+  { keywords: ["zona anterior", "anteriores"], x: 50, y: 57 },
+  { keywords: ["zona posterior", "posteriores"], x: 28, y: 60 },
+  { keywords: ["arcada superior", "maxilar"], x: 50, y: 50 },
+  { keywords: ["arcada inferior", "mandibular", "mandíbula"], x: 50, y: 65 },
+];
+
+function getMarkerPosition(ubicacion: string): { x: number; y: number } {
+  const lower = ubicacion.toLowerCase();
+  for (const loc of LOCATION_MAP) {
+    if (loc.keywords.some((kw) => lower.includes(kw))) {
+      return { x: loc.x, y: loc.y };
+    }
+  }
+  // Default: center of mouth area
+  return { x: 50, y: 58 };
+}
 
 const StepFoto = ({ data, update, next, back }: Props) => {
   const [loading, setLoading] = useState(false);
