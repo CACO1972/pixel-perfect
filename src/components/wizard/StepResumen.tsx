@@ -68,7 +68,7 @@ const StepResumen = ({ data, back }: Props) => {
       }
 
       const orderId = `eval-${Date.now()}`;
-      const returnUrl = `${window.location.origin}/pago-exitoso`;
+      const returnUrl = `${window.location.origin}/gracias`;
 
       const paymentRes = await createPayment({
         email,
