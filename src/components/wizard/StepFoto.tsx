@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { analyzeDental, type DentalAnalysis } from "@/lib/api";
 import type { WizardData } from "@/pages/Evaluacion";
 import CameraCapture from "./CameraCapture";
@@ -26,7 +26,18 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showCamera, setShowCamera] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Elapsed seconds timer during analysis
+  useEffect(() => {
+    if (!loading) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const processImage = async (base64: string) => {
     setError("");
