@@ -185,13 +185,20 @@ const CameraCapture = ({ onCapture, onClose }: Props) => {
               opacity="0.8"
             />
 
-            {/* Vertical midline */}
+            {/* Vertical center line — FULL — for face alignment */}
             <line
-              x1="200" y1="20" x2="200" y2="380"
-              stroke="hsl(34,38%,63%)"
-              strokeWidth="0.5"
-              strokeDasharray="3 6"
-              opacity="0.5"
+              x1="200" y1="0" x2="200" y2="400"
+              stroke="white"
+              strokeWidth="0.8"
+              opacity="0.6"
+            />
+
+            {/* Horizontal center line — FULL — for face alignment */}
+            <line
+              x1="0" y1="200" x2="400" y2="200"
+              stroke="white"
+              strokeWidth="0.8"
+              opacity="0.6"
             />
 
             {/* Horizontal proportion lines */}
