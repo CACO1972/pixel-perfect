@@ -9,7 +9,6 @@ import Empezar from "./pages/Empezar";
 import SegundaOpinion from "./pages/SegundaOpinion";
 import Costos from "./pages/Costos";
 import Gracias from "./pages/Gracias";
-import PagoExitoso from "./pages/PagoExitoso";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
