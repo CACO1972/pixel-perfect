@@ -4,7 +4,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 const painData = [
   {
     num: "01",
-    old: "Tres dentistas, tres presupuestos",
+    old: "1 radiografía, 3 dentistas, tres diagnósticos diferentes",
     new_text: "Un diagnóstico que puedes leer",
     desc: "La variabilidad diagnóstica en odontología llega al 40%. En Miró el criterio es siempre el mismo: datos, no intuición del día.",
   },
