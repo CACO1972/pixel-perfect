@@ -11,11 +11,46 @@ interface Props {
 const StepDatos = ({ data, update, next, back }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const formatRut = (value: string) => {
+    // Remove everything except digits and K/k
+    let clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
+    if (clean.length > 9) clean = clean.slice(0, 9);
+    if (clean.length > 1) {
+      const body = clean.slice(0, -1);
+      const dv = clean.slice(-1);
+      // Add dots
+      const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      return `${formatted}-${dv}`;
+    }
+    return clean;
+  };
+
+  const validateRut = (rut: string): boolean => {
+    const clean = rut.replace(/[.\-]/g, "");
+    if (clean.length < 7 || clean.length > 9) return false;
+    const body = clean.slice(0, -1);
+    const dv = clean.slice(-1).toUpperCase();
+    let sum = 0;
+    let mul = 2;
+    for (let i = body.length - 1; i >= 0; i--) {
+      sum += parseInt(body[i]) * mul;
+      mul = mul === 7 ? 2 : mul + 1;
+    }
+    const expected = 11 - (sum % 11);
+    const dvExpected = expected === 11 ? "0" : expected === 10 ? "K" : String(expected);
+    return dv === dvExpected;
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (!data.nombre.trim()) e.nombre = "Ingresa tu nombre";
     if (!data.whatsapp.trim()) e.whatsapp = "Ingresa tu WhatsApp";
     if (!data.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = "Email inválido";
+    if (!data.rut.trim()) {
+      e.rut = "El RUT es obligatorio para acceder a tu portal";
+    } else if (!validateRut(data.rut)) {
+      e.rut = "RUT inválido. Verifica el número";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
