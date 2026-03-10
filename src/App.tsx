@@ -9,7 +9,6 @@ import Empezar from "./pages/Empezar";
 import SegundaOpinion from "./pages/SegundaOpinion";
 import Costos from "./pages/Costos";
 import Gracias from "./pages/Gracias";
-import PagoExitoso from "./pages/PagoExitoso";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +26,7 @@ const App = () => (
           <Route path="/segunda-opinion" element={<SegundaOpinion />} />
           <Route path="/costos" element={<Costos />} />
           <Route path="/gracias" element={<Gracias />} />
-          <Route path="/pago-exitoso" element={<PagoExitoso />} />
+          <Route path="/pago-exitoso" element={<Gracias />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
