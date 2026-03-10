@@ -57,7 +57,7 @@ const PainSection = () => {
         <div ref={headerRef} className="reveal mb-16 md:mb-24">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-accent mb-3">El problema</p>
           <h2 className="font-serif font-light text-[clamp(2rem,5vw,3.5rem)] tracking-[-0.01em] leading-[1.05]">
-            El que ya fue<br />y no le creyeron.
+            Ya fuiste al dentista.<br />No te quedó claro qué necesitas.
           </h2>
         </div>
 
