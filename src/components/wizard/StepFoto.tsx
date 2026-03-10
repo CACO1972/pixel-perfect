@@ -71,7 +71,7 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showCamera, setShowCamera] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [activeMarker, setActiveMarker] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Elapsed seconds timer during analysis
