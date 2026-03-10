@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { analyzeDental, type DentalAnalysis } from "@/lib/api";
+import { analyzeDental, type DentalAnalysis, type DentalHallazgo } from "@/lib/api";
 import type { WizardData } from "@/pages/Evaluacion";
 import CameraCapture from "./CameraCapture";
 
@@ -16,17 +16,63 @@ const SEVERITY_STYLES: Record<string, string> = {
   severo: "text-status-urgent bg-status-urgent/10 border-status-urgent/30",
 };
 
+const SEVERITY_MARKER_COLORS: Record<string, string> = {
+  leve: "bg-status-success border-status-success",
+  moderado: "bg-status-warning border-status-warning",
+  severo: "bg-status-urgent border-status-urgent",
+};
+
 const STATE_ICON: Record<string, string> = {
   saludable: "✅",
   requiere_atencion: "⚠️",
   urgente: "🔴",
 };
 
+// Map dental location keywords to approximate % coordinates on a frontal smile photo
+// The photo is a square selfie centered on the face/smile
+const LOCATION_MAP: { keywords: string[]; x: number; y: number }[] = [
+  // Upper teeth
+  { keywords: ["incisivo superior", "incisivos superiores", "dientes superiores", "superiores anteriores", "centrales superiores"], x: 50, y: 52 },
+  { keywords: ["lateral superior derecho", "superior derecho"], x: 40, y: 52 },
+  { keywords: ["lateral superior izquierdo", "superior izquierdo"], x: 60, y: 52 },
+  { keywords: ["canino superior derecho"], x: 35, y: 54 },
+  { keywords: ["canino superior izquierdo"], x: 65, y: 54 },
+  { keywords: ["premolar superior", "premolares superiores"], x: 30, y: 55 },
+  { keywords: ["molar superior", "molares superiores"], x: 25, y: 57 },
+  // Lower teeth
+  { keywords: ["incisivo inferior", "incisivos inferiores", "dientes inferiores", "inferiores anteriores", "centrales inferiores", "anteroinferiores", "anteroinferior"], x: 50, y: 62 },
+  { keywords: ["lateral inferior derecho", "inferior derecho"], x: 43, y: 62 },
+  { keywords: ["lateral inferior izquierdo", "inferior izquierdo"], x: 57, y: 62 },
+  { keywords: ["canino inferior derecho"], x: 37, y: 63 },
+  { keywords: ["canino inferior izquierdo"], x: 63, y: 63 },
+  { keywords: ["premolar inferior", "premolares inferiores"], x: 32, y: 64 },
+  { keywords: ["molar inferior", "molares inferiores"], x: 27, y: 65 },
+  // General zones
+  { keywords: ["encía", "encias", "gingival", "encías"], x: 50, y: 48 },
+  { keywords: ["diastema", "espaciamiento", "espacio"], x: 50, y: 53 },
+  { keywords: ["zona anterior", "anteriores"], x: 50, y: 57 },
+  { keywords: ["zona posterior", "posteriores"], x: 28, y: 60 },
+  { keywords: ["arcada superior", "maxilar"], x: 50, y: 50 },
+  { keywords: ["arcada inferior", "mandibular", "mandíbula"], x: 50, y: 65 },
+];
+
+function getMarkerPosition(ubicacion: string): { x: number; y: number } {
+  const lower = ubicacion.toLowerCase();
+  for (const loc of LOCATION_MAP) {
+    if (loc.keywords.some((kw) => lower.includes(kw))) {
+      return { x: loc.x, y: loc.y };
+    }
+  }
+  // Default: center of mouth area
+  return { x: 50, y: 58 };
+}
+
 const StepFoto = ({ data, update, next, back }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showCamera, setShowCamera] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [activeMarker, setActiveMarker] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Elapsed seconds timer during analysis
@@ -187,9 +233,73 @@ const StepFoto = ({ data, update, next, back }: Props) => {
 
       {analisis && (
         <div className="space-y-6">
+          {/* Photo with markers */}
           {data.fotoBase64 && (
-            <div className="w-full overflow-hidden border border-border">
-              <img src={data.fotoBase64} alt="Tu foto" className="w-full h-48 object-cover" />
+            <div className="relative w-full aspect-square overflow-hidden border border-border">
+              <img src={data.fotoBase64} alt="Tu foto" className="w-full h-full object-cover" />
+              
+              {/* Numbered markers on detected findings */}
+              {analisis.hallazgos.map((h, i) => {
+                if (!h.ubicacion) return null;
+                const pos = getMarkerPosition(h.ubicacion);
+                const isActive = activeMarker === i;
+                const colorClass = SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent border-accent";
+                // Offset overlapping markers slightly
+                const offsetX = pos.x + (i % 3 - 1) * 3;
+                const offsetY = pos.y + Math.floor(i / 3) * 3;
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setActiveMarker(isActive ? null : i)}
+                    className={`absolute z-20 flex items-center justify-center transition-all duration-300 cursor-pointer
+                      ${isActive ? "w-8 h-8 -ml-4 -mt-4 scale-125" : "w-6 h-6 -ml-3 -mt-3 hover:scale-110"}
+                    `}
+                    style={{ left: `${offsetX}%`, top: `${offsetY}%` }}
+                    title={h.tipo.replace(/_/g, " ")}
+                  >
+                    {/* Pulse ring */}
+                    <span className={`absolute inset-0 rounded-full ${colorClass} opacity-30 animate-ping`} />
+                    {/* Marker dot */}
+                    <span className={`relative rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-mono font-bold text-[10px] ${colorClass}
+                      ${isActive ? "w-8 h-8" : "w-6 h-6"}
+                    `}>
+                      {i + 1}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* Active marker tooltip */}
+              {activeMarker !== null && analisis.hallazgos[activeMarker] && (() => {
+                const h = analisis.hallazgos[activeMarker];
+                const pos = getMarkerPosition(h.ubicacion);
+                const showAbove = pos.y > 50;
+                return (
+                  <div
+                    className={`absolute z-30 left-3 right-3 p-3 bg-foreground/90 backdrop-blur-sm text-background text-[0.8rem] leading-snug shadow-xl transition-all duration-300
+                      ${showAbove ? "bottom-[45%]" : "top-[45%]"}
+                    `}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold ${SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent"}`}>
+                        {activeMarker + 1}
+                      </span>
+                      <span className="font-display font-bold text-[0.8rem] uppercase">{h.tipo.replace(/_/g, " ")}</span>
+                    </div>
+                    <p className="opacity-90">{h.descripcion}</p>
+                    {h.ubicacion && <p className="text-[0.7rem] mt-1 opacity-60">📍 {h.ubicacion}</p>}
+                  </div>
+                );
+              })()}
+
+              {/* SCANDENT overlay label */}
+              <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
+                <span className="w-1.5 h-1.5 bg-accent rounded-full" />
+                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/80 drop-shadow-md">
+                  SCANDENT · {analisis.hallazgos.length} HALLAZGO{analisis.hallazgos.length !== 1 ? "S" : ""}
+                </span>
+              </div>
             </div>
           )}
 
@@ -205,14 +315,23 @@ const StepFoto = ({ data, update, next, back }: Props) => {
             <div className="space-y-3">
               <h4 className="font-display font-bold text-[0.85rem] uppercase tracking-wide text-mid-gray">Hallazgos detectados</h4>
               {analisis.hallazgos.map((h, i) => (
-                <div key={i} className={`p-4 border ${SEVERITY_STYLES[h.severidad] || "border-border"}`}>
+                <button
+                  key={i}
+                  onClick={() => setActiveMarker(activeMarker === i ? null : i)}
+                  className={`w-full text-left p-4 border transition-all duration-200 ${SEVERITY_STYLES[h.severidad] || "border-border"}
+                    ${activeMarker === i ? "ring-2 ring-accent shadow-md" : "hover:shadow-sm"}
+                  `}
+                >
                   <div className="flex items-center gap-2 mb-1">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 ${SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent"}`}>
+                      {i + 1}
+                    </span>
                     <span className="font-display font-bold text-[0.85rem] uppercase">{h.tipo.replace(/_/g, " ")}</span>
                     <span className="text-[0.7rem] opacity-60">· {h.confianza}</span>
                   </div>
-                  <p className="text-[0.85rem]">{h.descripcion}</p>
-                  {h.ubicacion && <p className="text-[0.75rem] mt-1 opacity-70">📍 {h.ubicacion}</p>}
-                </div>
+                  <p className="text-[0.85rem] pl-7">{h.descripcion}</p>
+                  {h.ubicacion && <p className="text-[0.75rem] mt-1 opacity-70 pl-7">📍 {h.ubicacion}</p>}
+                </button>
               ))}
             </div>
           )}
