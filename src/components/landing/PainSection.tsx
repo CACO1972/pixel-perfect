@@ -4,7 +4,7 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
 const painData = [
   {
     num: "01",
-    old: "Tres dentistas, tres presupuestos",
+    old: "1 radiografía, 3 dentistas, tres diagnósticos diferentes",
     new_text: "Un diagnóstico que puedes leer",
     desc: "La variabilidad diagnóstica en odontología llega al 40%. En Miró el criterio es siempre el mismo: datos, no intuición del día.",
   },
@@ -59,6 +59,11 @@ const PainSection = () => {
           <h2 className="font-serif font-light text-[clamp(2rem,5vw,3.5rem)] tracking-[-0.01em] leading-[1.05]">
             Ya fuiste al dentista.<br />No te quedó claro qué necesitas.
           </h2>
+          <div className="mt-8">
+            <audio controls className="w-full max-w-md" preload="metadata">
+              <source src="/audio/vas-al-dentista.mp3" type="audio/mpeg" />
+            </audio>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border">
