@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { analyzeDental, type DentalAnalysis } from "@/lib/api";
 import type { WizardData } from "@/pages/Evaluacion";
 import CameraCapture from "./CameraCapture";
@@ -26,7 +26,18 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showCamera, setShowCamera] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Elapsed seconds timer during analysis
+  useEffect(() => {
+    if (!loading) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const processImage = async (base64: string) => {
     setError("");
@@ -107,11 +118,61 @@ const StepFoto = ({ data, update, next, back }: Props) => {
         </div>
       )}
 
-      {loading && (
-        <div className="text-center py-16">
-          <div className="w-12 h-12 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-display font-semibold text-[0.95rem]">Analizando con SCANDENT...</p>
-          <p className="text-mid-gray text-[0.85rem] mt-1">Esto puede tomar unos segundos</p>
+      {/* Show image + scanner during loading */}
+      {loading && data.fotoBase64 && (
+        <div className="space-y-4">
+          <div className="relative w-full aspect-square overflow-hidden border border-border bg-foreground/5">
+            <img src={data.fotoBase64} alt="Foto capturada" className="w-full h-full object-cover" />
+            
+            {/* Scanner line effect */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div
+                className="absolute left-0 right-0 h-[2px] bg-accent shadow-[0_0_12px_hsl(var(--accent)),0_0_30px_hsl(var(--accent)/0.4)]"
+                style={{
+                  animation: "scanLine 2.2s ease-in-out infinite",
+                }}
+              />
+            </div>
+
+            {/* Grid overlay */}
+            <div className="absolute inset-0 pointer-events-none opacity-20"
+              style={{
+                backgroundImage: `
+                  linear-gradient(hsl(var(--accent) / 0.3) 1px, transparent 1px),
+                  linear-gradient(90deg, hsl(var(--accent) / 0.3) 1px, transparent 1px)
+                `,
+                backgroundSize: "50px 50px",
+              }}
+            />
+
+            {/* Corner brackets */}
+            <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full pointer-events-none">
+              <path d="M30 60 L30 30 L60 30" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
+              <path d="M340 30 L370 30 L370 60" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
+              <path d="M30 340 L30 370 L60 370" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
+              <path d="M340 370 L370 370 L370 340" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
+            </svg>
+
+            {/* SCANDENT label */}
+            <div className="absolute top-3 left-3 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+              <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-accent drop-shadow-md">
+                SCANDENT · ANALYZING
+              </span>
+            </div>
+
+            {/* Elapsed time counter */}
+            <div className="absolute bottom-3 right-3 bg-foreground/70 backdrop-blur-sm px-3 py-1.5 rounded">
+              <span className="font-mono text-[0.85rem] text-accent font-bold tabular-nums">
+                {String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:{String(elapsedSeconds % 60).padStart(2, "0")}
+              </span>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="font-display font-semibold text-[0.95rem]">Analizando con SCANDENT...</p>
+            <p className="text-mid-gray text-[0.85rem] mt-1">Procesando imagen · {elapsedSeconds}s</p>
+          </div>
         </div>
       )}
 

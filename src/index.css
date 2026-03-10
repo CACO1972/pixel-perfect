@@ -267,3 +267,8 @@ audio::-webkit-media-controls-panel {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+@keyframes scanLine {
+  0% { top: 0%; }
+  50% { top: 98%; }
+  100% { top: 0%; }
+}
