@@ -1,4 +1,5 @@
 import type { WizardData } from "@/pages/Evaluacion";
+import type { DentalHallazgo } from "@/lib/api";
 
 const PROGRAMAS = [
   {
@@ -8,14 +9,8 @@ const PROGRAMAS = [
     desc: "Solución completa de implantes dentales con planificación digital 3D y guía quirúrgica.",
     incluye: ["Diagnóstico IA completo", "Planificación 3D", "Guía quirúrgica digital", "Seguimiento post-op"],
     motivos: ["faltan_dientes"],
-  },
-  {
-    id: "revive",
-    nombre: "REVIVE",
-    subtitulo: "Rehabilitación Oral",
-    desc: "Recuperación oral integral para devolverte función y estética con un plan personalizado.",
-    incluye: ["Diagnóstico IA completo", "Plan de tratamiento escalonado", "Alternativas A/B/C escritas", "Seguimiento continuo"],
-    motivos: ["dolor", "segunda_opinion"],
+    // Keywords in hallazgos that indicate this program
+    hallazgoKeywords: ["ausencia", "falta", "faltan", "edéntulo", "pérdida dental", "diente perdido", "dientes perdidos", "espacio edéntulo", "pieza ausente", "piezas ausentes", "implante"],
   },
   {
     id: "align",
@@ -24,16 +19,78 @@ const PROGRAMAS = [
     desc: "Alineación y corrección dental con tecnología de última generación.",
     incluye: ["Análisis cefalométrico IA", "Simulación de resultado", "Plan de tratamiento detallado", "Opciones de aparatos"],
     motivos: ["ortodoncia", "mejorar_sonrisa"],
+    hallazgoKeywords: ["apiñamiento", "maloclusión", "mordida", "desalineación", "diastema", "espaciamiento", "chuecos", "torcidos", "rotación", "malposición", "sobremordida", "cruzada", "abierta", "protrusión", "clase ii", "clase iii"],
+  },
+  {
+    id: "estetica",
+    nombre: "ESTÉTICA",
+    subtitulo: "Diseño de Sonrisa",
+    desc: "Restauraciones estéticas para devolver la armonía y naturalidad a tu sonrisa.",
+    incluye: ["Análisis facial IA (Armonía)", "Diseño digital de sonrisa", "Mock-up / prueba estética", "Carillas o restauraciones"],
+    motivos: ["mejorar_sonrisa"],
+    hallazgoKeywords: ["desgaste", "desgastado", "teñido", "manchas", "pigmentación", "oscurecimiento", "fractura", "chip", "caries frontal", "caries anterior", "estética", "carilla", "corona", "resina", "blanqueamiento", "discromía", "fluorosis"],
   },
   {
     id: "zero_caries",
     nombre: "ZERO CARIES",
     subtitulo: "Prevención con IA",
-    desc: "Programa preventivo inteligente que detecta riesgos antes de que se conviertan en problemas.",
+    desc: "Programa preventivo inteligente que detecta caries y riesgos antes de que avancen.",
     incluye: ["Análisis dental IA", "Mapa de riesgo personalizado", "Protocolo preventivo", "Control semestral"],
     motivos: ["preventivo"],
+    hallazgoKeywords: ["caries", "cavidad", "desmineralización", "mancha blanca", "lesión cariosa", "sarro", "cálculo", "placa", "gingivitis"],
+  },
+  {
+    id: "revive",
+    nombre: "REVIVE",
+    subtitulo: "Rehabilitación Oral",
+    desc: "Recuperación oral integral para devolverte función y estética con un plan personalizado.",
+    incluye: ["Diagnóstico IA completo", "Plan de tratamiento escalonado", "Alternativas A/B/C escritas", "Seguimiento continuo"],
+    motivos: ["dolor", "segunda_opinion"],
+    hallazgoKeywords: ["inflamación", "periodontal", "movilidad", "absceso", "infección", "dolor", "sensibilidad", "recesión", "bolsa periodontal", "pérdida ósea"],
   },
 ];
+
+// Score each program based on AI findings
+function scoreProgram(programa: typeof PROGRAMAS[0], hallazgos: DentalHallazgo[]): number {
+  let score = 0;
+  const allText = hallazgos.map(h => 
+    `${h.tipo} ${h.descripcion} ${h.ubicacion} ${h.recomendacionEspecifica}`.toLowerCase()
+  ).join(" ");
+
+  for (const kw of programa.hallazgoKeywords) {
+    if (allText.includes(kw.toLowerCase())) {
+      score += 1;
+    }
+  }
+  // Weight by severity
+  for (const h of hallazgos) {
+    const hText = `${h.tipo} ${h.descripcion} ${h.ubicacion}`.toLowerCase();
+    const matches = programa.hallazgoKeywords.some(kw => hText.includes(kw.toLowerCase()));
+    if (matches) {
+      if (h.severidad === "severo") score += 2;
+      else if (h.severidad === "moderado") score += 1;
+    }
+  }
+  return score;
+}
+
+function getRecommendedProgram(data: WizardData) {
+  const hallazgos = data.analisis?.hallazgos || [];
+  
+  if (hallazgos.length > 0) {
+    // Score all programs based on AI findings
+    const scored = PROGRAMAS.map(p => ({ program: p, score: scoreProgram(p, hallazgos) }))
+      .sort((a, b) => b.score - a.score);
+    
+    // If top program has a meaningful score, use it
+    if (scored[0].score > 0) {
+      return scored[0].program;
+    }
+  }
+  
+  // Fallback to motivo-based recommendation
+  return PROGRAMAS.find((p) => p.motivos.includes(data.motivo)) || null;
+}
 
 interface Props {
   data: WizardData;
@@ -43,7 +100,7 @@ interface Props {
 }
 
 const StepRuta = ({ data, update, next, back }: Props) => {
-  const recomendado = PROGRAMAS.find((p) => p.motivos.includes(data.motivo));
+  const recomendado = getRecommendedProgram(data);
   const otros = PROGRAMAS.filter((p) => p !== recomendado);
 
   const handleSelect = (id: string) => {
