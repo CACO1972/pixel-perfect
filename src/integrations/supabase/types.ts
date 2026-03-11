@@ -2352,6 +2352,36 @@ export type Database = {
           },
         ]
       }
+      patient_credentials: {
+        Row: {
+          created_at: string
+          dentalink_patient_id: string | null
+          id: string
+          name: string | null
+          password_hash: string
+          rut: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dentalink_patient_id?: string | null
+          id?: string
+          name?: string | null
+          password_hash: string
+          rut: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dentalink_patient_id?: string | null
+          id?: string
+          name?: string | null
+          password_hash?: string
+          rut?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_scheduling_preferences: {
         Row: {
           avoid_dates: string[] | null

@@ -1,7 +1,7 @@
 /**
  * PORTAL PACIENTE — Dashboard principal
  * Acceso: /paciente
- * Auth: RUT + últimos 4 dígitos del teléfono
+ * Auth: RUT + contraseña propia
  */
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, User, AlertCircle, FileText, CreditCard, ClipboardList, ShieldCheck, Pill, ArrowLeft, Phone } from "lucide-react";
+import { Calendar, User, AlertCircle, FileText, CreditCard, ClipboardList, ShieldCheck, Pill, ArrowLeft, Phone, Lock, UserPlus } from "lucide-react";
 import SiteHeader from "@/components/landing/SiteHeader";
 
 const DENTALINK_PROXY = `${import.meta.env.VITE_SUPABASE_URL ?? ""}/functions/v1/dentalink-proxy`;
@@ -40,7 +40,6 @@ interface PatientData {
 /* ── Formatear RUT mientras escribe ──────────────────────────── */
 const formatRut = (value: string) => {
   const clean = value.replace(/[^0-9kK-]/g, "").toUpperCase();
-  // Remove all hyphens to rebuild
   const digits = clean.replace(/-/g, "");
   if (digits.length <= 1) return digits;
   const body = digits.slice(0, -1);
@@ -48,10 +47,23 @@ const formatRut = (value: string) => {
   return `${body}-${dv}`;
 };
 
-/* ── Login con RUT + teléfono ────────────────────────────────── */
-const LoginForm = ({ onSubmit, loading, error }: { onSubmit: (rut: string, phone4: string) => void; loading: boolean; error: string }) => {
+/* ── Login / Register Form ───────────────────────────────────── */
+const LoginForm = ({
+  onLogin,
+  onRegister,
+  loading,
+  error,
+  successMsg,
+}: {
+  onLogin: (rut: string, password: string) => void;
+  onRegister: (rut: string, password: string) => void;
+  loading: boolean;
+  error: string;
+  successMsg: string;
+}) => {
   const [rut, setRut] = useState("");
-  const [phone4, setPhone4] = useState("");
+  const [password, setPassword] = useState("");
+  const [mode, setMode] = useState<"login" | "register">("login");
 
   return (
     <>
@@ -63,7 +75,9 @@ const LoginForm = ({ onSubmit, loading, error }: { onSubmit: (rut: string, phone
               <User className="w-4 h-4 text-accent" /> Portal Paciente
             </CardTitle>
             <p className="font-body text-xs text-muted-foreground mt-1">
-              Ingresa tu RUT y los últimos 4 dígitos de tu teléfono registrado
+              {mode === "login"
+                ? "Ingresa tu RUT y contraseña"
+                : "Crea tu cuenta con tu RUT registrado en la clínica"}
             </p>
           </CardHeader>
           <CardContent className="p-6 flex flex-col gap-4">
@@ -79,31 +93,67 @@ const LoginForm = ({ onSubmit, loading, error }: { onSubmit: (rut: string, phone
             </div>
             <div className="flex flex-col gap-1">
               <Label className="font-display font-bold text-[0.7rem] tracking-widest uppercase flex items-center gap-1">
-                <Phone className="w-3 h-3" /> Últimos 4 dígitos de tu teléfono
+                <Lock className="w-3 h-3" /> Contraseña
               </Label>
               <Input
-                value={phone4}
-                onChange={e => setPhone4(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                placeholder="7966"
-                maxLength={4}
-                inputMode="numeric"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder={mode === "register" ? "Crea una contraseña" : "Tu contraseña"}
                 style={{ borderRadius: 0 }}
               />
             </div>
+
             {error && (
               <Alert variant="destructive" style={{ borderRadius: 0 }}>
                 <AlertCircle className="w-4 h-4" />
                 <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
             )}
-            <Button
-              onClick={() => onSubmit(rut, phone4)}
-              disabled={loading || !rut.trim() || phone4.length !== 4}
-              className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase"
-              style={{ borderRadius: 0 }}
-            >
-              {loading ? "Verificando…" : "Ingresar"}
-            </Button>
+
+            {successMsg && (
+              <Alert style={{ borderRadius: 0 }} className="border-accent/30 bg-accent/5">
+                <AlertDescription className="text-sm text-accent">{successMsg}</AlertDescription>
+              </Alert>
+            )}
+
+            {mode === "login" ? (
+              <>
+                <Button
+                  onClick={() => onLogin(rut, password)}
+                  disabled={loading || !rut.trim() || !password}
+                  className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase"
+                  style={{ borderRadius: 0 }}
+                >
+                  {loading ? "Verificando…" : "Ingresar"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setMode("register")}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1 mt-1"
+                >
+                  <UserPlus className="w-3 h-3" /> ¿Primera vez? Crea tu cuenta
+                </button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={() => onRegister(rut, password)}
+                  disabled={loading || !rut.trim() || password.length < 4}
+                  className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase"
+                  style={{ borderRadius: 0 }}
+                >
+                  {loading ? "Creando cuenta…" : "Crear cuenta"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1 mt-1"
+                >
+                  <ArrowLeft className="w-3 h-3" /> Ya tengo cuenta
+                </button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -130,11 +180,10 @@ const PatientDashboardView = ({ data, onClose }: { data: PatientData; onClose: (
   <>
     <SiteHeader />
     <div className="max-w-[860px] mx-auto p-6 pt-24 pb-20">
-      {/* Header */}
       <div className="mb-8">
         <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent mb-1">Portal Paciente</p>
         <h1 className="font-serif font-light text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">{data.name}</h1>
-        <p className="font-body text-sm text-muted-foreground mt-1">{data.email} · ···· {data.phone.slice(-4)}</p>
+        <p className="font-body text-sm text-muted-foreground mt-1">{data.email}</p>
       </div>
 
       {/* Citas */}
@@ -154,8 +203,7 @@ const PatientDashboardView = ({ data, onClose }: { data: PatientData; onClose: (
               </div>
             ))}
           </div>
-        ) : null}
-        {data.citas.length === 0 && (
+        ) : (
           <div className="border border-border p-8 text-center">
             <Calendar className="w-8 h-8 mx-auto mb-2 text-accent opacity-40" />
             <p className="font-body text-sm text-muted-foreground">No hay citas registradas</p>
@@ -284,21 +332,16 @@ const PacienteDashboard = () => {
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleLogin = async (rut: string, phone4: string) => {
+  const handleLogin = async (rut: string, password: string) => {
     setLoading(true);
     setError("");
-
-    // RUT already without dots
+    setSuccessMsg("");
     const cleanRut = rut.trim();
 
     if (!/^\d{7,8}-[\dkK]$/i.test(cleanRut)) {
       setError("Formato de RUT inválido");
-      setLoading(false);
-      return;
-    }
-    if (!/^\d{4}$/.test(phone4)) {
-      setError("Ingresa los 4 últimos dígitos de tu teléfono");
       setLoading(false);
       return;
     }
@@ -307,12 +350,12 @@ const PacienteDashboard = () => {
       const res = await fetch(DENTALINK_PROXY, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get_patient_portal", rut: cleanRut, phone_last4: phone4 }),
+        body: JSON.stringify({ action: "login_patient_portal", rut: cleanRut, password }),
       });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "No se pudo verificar tu identidad");
+        throw new Error(errData.error || "Error al iniciar sesión");
       }
 
       const data = await res.json();
@@ -330,14 +373,70 @@ const PacienteDashboard = () => {
       });
       setStep("dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al verificar identidad");
+      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
   };
 
-  if (step === "login") return <LoginForm onSubmit={handleLogin} loading={loading} error={error} />;
-  if (step === "dashboard" && patientData) return <PatientDashboardView data={patientData} onClose={() => { setStep("login"); setPatientData(null); }} />;
+  const handleRegister = async (rut: string, password: string) => {
+    setLoading(true);
+    setError("");
+    setSuccessMsg("");
+    const cleanRut = rut.trim();
+
+    if (!/^\d{7,8}-[\dkK]$/i.test(cleanRut)) {
+      setError("Formato de RUT inválido");
+      setLoading(false);
+      return;
+    }
+    if (password.length < 4) {
+      setError("La contraseña debe tener al menos 4 caracteres");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(DENTALINK_PROXY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "register_patient_portal", rut: cleanRut, password }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Error al registrarse");
+      }
+
+      setSuccessMsg("¡Cuenta creada! Ya puedes ingresar con tu RUT y contraseña.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al registrarse");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "login") {
+    return (
+      <LoginForm
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        loading={loading}
+        error={error}
+        successMsg={successMsg}
+      />
+    );
+  }
+
+  if (step === "dashboard" && patientData) {
+    return (
+      <PatientDashboardView
+        data={patientData}
+        onClose={() => { setStep("login"); setPatientData(null); }}
+      />
+    );
+  }
+
   return null;
 };
 
