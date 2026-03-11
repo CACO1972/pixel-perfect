@@ -32,13 +32,27 @@ serve(async (req) => {
           });
         }
 
-        // Search patient by RUT
-        const searchRes = await fetch(
-          `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rut)}`,
-          { headers }
-        );
+        // Search patient by RUT — try JSON filter first, then /buscar fallback
+        let patients: Record<string, unknown>[] = [];
+
+        // Attempt 1: filter query
+        const rutFilter = JSON.stringify({ rut: { eq: rut } });
+        const searchUrl = `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rutFilter)}`;
+        console.log("[portal] attempt1:", searchUrl);
+        const searchRes = await fetch(searchUrl, { headers });
         const searchData = await searchRes.json();
-        const patients = searchData?.data ?? [];
+        console.log("[portal] attempt1 status:", searchRes.status, JSON.stringify(searchData).slice(0, 300));
+        patients = searchData?.data ?? [];
+
+        // Attempt 2: /buscar endpoint
+        if (!patients.length) {
+          const buscarUrl = `${DENTALINK_BASE}/pacientes/buscar?rut=${encodeURIComponent(rut)}`;
+          console.log("[portal] attempt2:", buscarUrl);
+          const buscarRes = await fetch(buscarUrl, { headers });
+          const buscarData = await buscarRes.json();
+          console.log("[portal] attempt2 status:", buscarRes.status, JSON.stringify(buscarData).slice(0, 300));
+          patients = buscarData?.data ? (Array.isArray(buscarData.data) ? buscarData.data : [buscarData.data]) : [];
+        }
 
         if (!patients.length) {
           return new Response(JSON.stringify({ error: "No se encontró un paciente con ese RUT" }), {
