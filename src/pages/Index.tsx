@@ -7,7 +7,7 @@ import HumanaSection from "@/components/landing/HumanaSection";
 import QuoteSection from "@/components/landing/QuoteSection";
 import ProgramsSection from "@/components/landing/ProgramsSection";
 import MapaConfianzaSection from "@/components/landing/MapaConfianzaSection";
-import CtaSection from "@/components/landing/CtaSection";
+
 import SiteFooter from "@/components/landing/SiteFooter";
 
 const Index = () => {
