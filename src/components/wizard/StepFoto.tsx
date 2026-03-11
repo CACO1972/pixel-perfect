@@ -349,6 +349,22 @@ const StepFoto = ({ data, update, next, back }: Props) => {
             Este análisis es orientativo. La evaluación clínica presencial confirmará los hallazgos.
           </p>
 
+          {/* Retake / re-upload */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { update({ fotoBase64: null, analisis: null }); setShowCamera(true); }}
+              className="flex-1 py-2.5 border border-accent/40 text-accent font-display font-bold text-[0.8rem] tracking-[0.05em] uppercase hover:bg-accent/10 transition-colors"
+            >
+              Tomar otra foto
+            </button>
+            <button
+              onClick={() => { update({ fotoBase64: null, analisis: null }); fileRef.current?.click(); }}
+              className="flex-1 py-2.5 border border-border text-mid-gray font-display text-[0.8rem] tracking-[0.05em] uppercase hover:border-accent/30 hover:text-foreground transition-colors"
+            >
+              Subir otra imagen
+            </button>
+          </div>
+
           {/* ImplantX Score — shown when ausencia dental detected */}
           {analisis.implantxScore && (
             <div className="border border-accent/30 bg-accent/5 p-5 space-y-3">
