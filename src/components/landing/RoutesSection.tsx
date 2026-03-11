@@ -1,7 +1,7 @@
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { useRef, useEffect, useState } from "react";
 
-const RouteItem = ({ route }: { route: { num: string; title: string; desc: string; back: string } }) => {
+const RouteItem = ({ route }: { route: { num: string; title: string; desc: string; back: string; href: string } }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [flipped, setFlipped] = useState(false);
 
