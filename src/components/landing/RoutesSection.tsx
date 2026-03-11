@@ -78,7 +78,7 @@ const RoutesSection = () => {
   const headerRef = useScrollReveal();
 
   return (
-    <section className="py-24 md:py-40">
+    <section id="routes" className="py-24 md:py-40">
       <div className="container">
         <div ref={headerRef} className="reveal mb-12 md:mb-20">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-accent mb-3">Tu camino</p>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 const stats = [
-  { num: "30+", label: "Años de experiencia" },
+  { num: "18", label: "Años de experiencia" },
   { num: "11K+", label: "Implantes documentados" },
   { num: "6", label: "Módulos IA activos" },
   { num: "98%", label: "Satisfacción" },
@@ -138,8 +138,26 @@ const HeroSection = () => {
           Si entiendes lo que tienes, confías. Aquí el diagnóstico se explica, se escribe y se documenta. Tú decides.
         </p>
 
+        {/* CTA buttons */}
+        <div className="flex flex-wrap gap-4 mb-16 md:mb-20">
+          <a
+            href="/evaluacion"
+            className="inline-block px-8 py-4 bg-accent text-accent-foreground font-display font-bold text-[0.9rem] tracking-[0.06em] uppercase no-underline hover:opacity-90 transition-opacity"
+          >
+            Evaluar mi caso →
+          </a>
+          <a
+            href="https://ff.healthatom.io/41knMr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-8 py-4 border border-border text-foreground font-display font-bold text-[0.9rem] tracking-[0.06em] uppercase no-underline hover:border-accent hover:text-accent transition-colors"
+          >
+            Agendar hora directa
+          </a>
+        </div>
+
         {/* Stats */}
-        <div className="flex flex-wrap gap-6 md:gap-16 mt-16 md:mt-24 pt-8 border-t border-border">
+        <div className="flex flex-wrap gap-6 md:gap-16 mt-4 pt-8 border-t border-border">
           {stats.map((s) => (
             <div key={s.label}>
               <div className="font-display font-[800] text-[clamp(1.5rem,3vw,2.5rem)] tracking-[-0.02em] leading-none">
