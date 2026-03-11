@@ -291,70 +291,51 @@ export type Database = {
       }
       appointments: {
         Row: {
-          appointment_type_id: string | null
-          confirmation_sent: boolean | null
-          created_at: string
-          dentalink_appointment_id: string | null
-          dentalink_patient_id: string | null
-          dentalink_professional_id: string | null
-          duration_minutes: number
+          consultorio: string | null
+          created_at: string | null
+          dentalink_cita_id: number | null
+          doctor: string | null
+          estado: string | null
+          fecha: string
+          hora: string | null
           id: string
-          lead_id: string | null
-          reminder_sent: boolean | null
-          scheduled_date: string
-          scheduled_time: string
-          status: string
-          updated_at: string
-          user_id: string | null
+          notas: string | null
+          paciente_rut: string | null
+          tratamiento: string | null
         }
         Insert: {
-          appointment_type_id?: string | null
-          confirmation_sent?: boolean | null
-          created_at?: string
-          dentalink_appointment_id?: string | null
-          dentalink_patient_id?: string | null
-          dentalink_professional_id?: string | null
-          duration_minutes: number
+          consultorio?: string | null
+          created_at?: string | null
+          dentalink_cita_id?: number | null
+          doctor?: string | null
+          estado?: string | null
+          fecha: string
+          hora?: string | null
           id?: string
-          lead_id?: string | null
-          reminder_sent?: boolean | null
-          scheduled_date: string
-          scheduled_time: string
-          status?: string
-          updated_at?: string
-          user_id?: string | null
+          notas?: string | null
+          paciente_rut?: string | null
+          tratamiento?: string | null
         }
         Update: {
-          appointment_type_id?: string | null
-          confirmation_sent?: boolean | null
-          created_at?: string
-          dentalink_appointment_id?: string | null
-          dentalink_patient_id?: string | null
-          dentalink_professional_id?: string | null
-          duration_minutes?: number
+          consultorio?: string | null
+          created_at?: string | null
+          dentalink_cita_id?: number | null
+          doctor?: string | null
+          estado?: string | null
+          fecha?: string
+          hora?: string | null
           id?: string
-          lead_id?: string | null
-          reminder_sent?: boolean | null
-          scheduled_date?: string
-          scheduled_time?: string
-          status?: string
-          updated_at?: string
-          user_id?: string | null
+          notas?: string | null
+          paciente_rut?: string | null
+          tratamiento?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "appointments_appointment_type_id_fkey"
-            columns: ["appointment_type_id"]
+            foreignKeyName: "appointments_paciente_rut_fkey"
+            columns: ["paciente_rut"]
             isOneToOne: false
-            referencedRelation: "appointment_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "funnel_leads"
-            referencedColumns: ["id"]
+            referencedRelation: "pacientes"
+            referencedColumns: ["rut"]
           },
         ]
       }
@@ -2231,6 +2212,54 @@ export type Database = {
           },
         ]
       }
+      pacientes: {
+        Row: {
+          apellido: string | null
+          contacto_emergencia_nombre: string | null
+          contacto_emergencia_telefono: string | null
+          created_at: string | null
+          dentalink_id: number | null
+          direccion: string | null
+          email: string | null
+          fecha_nacimiento: string | null
+          id: string
+          nombre: string | null
+          rut: string
+          telefono: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          apellido?: string | null
+          contacto_emergencia_nombre?: string | null
+          contacto_emergencia_telefono?: string | null
+          created_at?: string | null
+          dentalink_id?: number | null
+          direccion?: string | null
+          email?: string | null
+          fecha_nacimiento?: string | null
+          id?: string
+          nombre?: string | null
+          rut: string
+          telefono?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          apellido?: string | null
+          contacto_emergencia_nombre?: string | null
+          contacto_emergencia_telefono?: string | null
+          created_at?: string | null
+          dentalink_id?: number | null
+          direccion?: string | null
+          email?: string | null
+          fecha_nacimiento?: string | null
+          id?: string
+          nombre?: string | null
+          rut?: string
+          telefono?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       pagos_4p: {
         Row: {
           caso_id: string | null
@@ -2292,6 +2321,50 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_pipeline_4p"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      pagos_portal: {
+        Row: {
+          concepto: string | null
+          created_at: string | null
+          estado: string | null
+          fecha: string | null
+          id: string
+          metodo: string | null
+          monto: number
+          paciente_rut: string | null
+          referencia: string | null
+        }
+        Insert: {
+          concepto?: string | null
+          created_at?: string | null
+          estado?: string | null
+          fecha?: string | null
+          id?: string
+          metodo?: string | null
+          monto: number
+          paciente_rut?: string | null
+          referencia?: string | null
+        }
+        Update: {
+          concepto?: string | null
+          created_at?: string | null
+          estado?: string | null
+          fecha?: string | null
+          id?: string
+          metodo?: string | null
+          monto?: number
+          paciente_rut?: string | null
+          referencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_portal_paciente_rut_fkey"
+            columns: ["paciente_rut"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["rut"]
           },
         ]
       }
@@ -2381,6 +2454,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      patient_documents: {
+        Row: {
+          created_at: string | null
+          fecha: string | null
+          firmado: boolean | null
+          id: string
+          nombre: string | null
+          paciente_rut: string | null
+          tipo: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fecha?: string | null
+          firmado?: boolean | null
+          id?: string
+          nombre?: string | null
+          paciente_rut?: string | null
+          tipo: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fecha?: string | null
+          firmado?: boolean | null
+          id?: string
+          nombre?: string | null
+          paciente_rut?: string | null
+          tipo?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_paciente_rut_fkey"
+            columns: ["paciente_rut"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["rut"]
+          },
+        ]
       }
       patient_scheduling_preferences: {
         Row: {
@@ -3195,6 +3309,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "funnel_leads"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatments: {
+        Row: {
+          created_at: string | null
+          doctor: string | null
+          estado: string | null
+          fecha_estimada_fin: string | null
+          fecha_inicio: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          paciente_rut: string | null
+          progreso: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          doctor?: string | null
+          estado?: string | null
+          fecha_estimada_fin?: string | null
+          fecha_inicio?: string | null
+          id?: string
+          nombre: string
+          notas?: string | null
+          paciente_rut?: string | null
+          progreso?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          doctor?: string | null
+          estado?: string | null
+          fecha_estimada_fin?: string | null
+          fecha_inicio?: string | null
+          id?: string
+          nombre?: string
+          notas?: string | null
+          paciente_rut?: string | null
+          progreso?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatments_paciente_rut_fkey"
+            columns: ["paciente_rut"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["rut"]
           },
         ]
       }
