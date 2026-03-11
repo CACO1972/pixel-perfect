@@ -32,9 +32,10 @@ serve(async (req) => {
           });
         }
 
-        // Search patient by RUT
+        // Search patient by RUT using Dentalink JSON filter syntax
+        const rutFilter = JSON.stringify({ rut: { eq: rut } });
         const searchRes = await fetch(
-          `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rut)}`,
+          `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rutFilter)}`,
           { headers }
         );
         const searchData = await searchRes.json();
