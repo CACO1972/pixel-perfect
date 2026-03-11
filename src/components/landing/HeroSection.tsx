@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 const stats = [
-  { num: "30+", label: "Años de experiencia" },
+  { num: "18", label: "Años de experiencia" },
   { num: "11K+", label: "Implantes documentados" },
   { num: "6", label: "Módulos IA activos" },
   { num: "98%", label: "Satisfacción" },
