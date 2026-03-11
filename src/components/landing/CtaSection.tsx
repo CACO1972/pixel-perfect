@@ -31,7 +31,7 @@ const CtaSection = () => {
             href="/evaluacion"
             className="inline-block w-full px-5 py-5 bg-accent text-accent-foreground border-none font-display text-[1rem] font-bold tracking-[0.05em] uppercase text-center no-underline hover:opacity-90 transition-colors"
           >
-            Comenzar mi evaluación →
+            Agendar mi hora →
           </a>
           <div className="flex justify-center gap-6 mt-4 flex-wrap">
             <span className="font-mono text-[10px] text-mid-gray">🔒 Pago seguro · Flow.cl</span>

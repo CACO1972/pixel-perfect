@@ -118,40 +118,25 @@ const HeroSection = () => {
             aria-hidden="true"
             className="absolute top-0 left-0 font-serif font-light text-[clamp(2.5rem,7vw,6rem)] leading-[1.05] tracking-[-0.01em] text-foreground/[0.04] translate-x-[3px] translate-y-[3px]"
           >
-            Si entiendes<br />lo que tienes,<br />
-            <em className="not-italic">confías.</em>
+            Tres dentistas,<br />tres diagnósticos.
           </h1>
           <h1
             aria-hidden="true"
             className="absolute top-0 left-0 font-serif font-light text-[clamp(2.5rem,7vw,6rem)] leading-[1.05] tracking-[-0.01em] text-accent/[0.08] -translate-x-[2px] -translate-y-[2px]"
           >
-            Si entiendes<br />lo que tienes,<br />
-            <em className="not-italic">confías.</em>
+            Tres dentistas,<br />tres diagnósticos.
           </h1>
           {/* Main title */}
           <h1 className="relative font-serif font-light text-[clamp(2.5rem,7vw,6rem)] leading-[1.05] tracking-[-0.01em]">
-            Si entiendes<br />
-            lo que tienes,<br />
-            <em className="not-italic text-accent">confías.</em>
+            Tres dentistas,<br />
+            tres <em className="not-italic text-accent">diagnósticos.</em>
           </h1>
         </div>
 
         {/* Subtitle */}
         <p className="font-body text-[clamp(1rem,2vw,1.25rem)] font-light text-muted-foreground max-w-[620px] leading-relaxed mb-8 md:mb-12">
-          La mayoría llega con un presupuesto de otra clínica que no entiende. Aquí el diagnóstico se explica, se escribe y se documenta. Tú decides.
+          Si entiendes lo que tienes, confías. Aquí el diagnóstico se explica, se escribe y se documenta. Tú decides.
         </p>
-
-        {/* CTA */}
-        <a
-          href="/evaluacion"
-          className="inline-flex items-center gap-3 text-[0.85rem] font-semibold tracking-[0.15em] uppercase text-accent-foreground no-underline px-8 py-4 bg-accent hover:opacity-90 hover:-translate-y-px transition-all group"
-        >
-          Comenzar evaluación
-          <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
-        </a>
 
         {/* Stats */}
         <div className="flex flex-wrap gap-6 md:gap-16 mt-16 md:mt-24 pt-8 border-t border-border">
