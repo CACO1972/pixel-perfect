@@ -16,9 +16,6 @@ const NotFound      = lazy(() => import("./pages/NotFound"));
 
 // ── Portal Paciente ────────────────────────────────────────────────────────────
 const PacienteDashboard  = lazy(() => import("./pages/paciente/Dashboard"));
-const PacienteMisCitas   = lazy(() => import("./pages/paciente/MisCitas"));
-const PacienteAsesor     = lazy(() => import("./pages/paciente/AsesorVirtual"));
-const PacientePerfil     = lazy(() => import("./pages/paciente/MiPerfil"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
