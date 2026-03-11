@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,23 +8,209 @@ const corsHeaders = {
 
 const DENTALINK_BASE = "https://api.dentalink.healthatom.com/api/v1";
 
+/* ── Simple password hashing with Web Crypto (PBKDF2) ─────── */
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  const hashArray = new Uint8Array(bits);
+  // Store as salt:hash in hex
+  const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, "0")).join("");
+  const hashHex = Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
+  return `${saltHex}:${hashHex}`;
+}
+
+async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  const [saltHex, hashHex] = stored.split(":");
+  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map(h => parseInt(h, 16)));
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  const computed = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return computed === hashHex;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { action, params, rut, phone_last4 } = await req.json();
+    const body = await req.json();
+    const { action, params, rut, phone_last4, password } = body;
     const TOKEN = Deno.env.get("DENTALINK_TOKEN")!;
     const headers = {
       Authorization: `Token ${TOKEN}`,
       "Content-Type": "application/json",
     };
 
+    // Supabase admin client for patient_credentials
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     let result: unknown;
 
     switch (action) {
-      /* ── Portal Paciente: lookup + verify phone ─────────────── */
+      /* ── Register: RUT + password ───────────────────────────── */
+      case "register_patient_portal": {
+        if (!rut || !password || password.length < 4) {
+          return new Response(JSON.stringify({ error: "RUT y contraseña (mín. 4 caracteres) son requeridos" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Check if already registered
+        const { data: existing } = await supabaseAdmin
+          .from("patient_credentials")
+          .select("id")
+          .eq("rut", rut)
+          .maybeSingle();
+
+        if (existing) {
+          return new Response(JSON.stringify({ error: "Este RUT ya tiene una cuenta. Usa tu contraseña para ingresar." }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Verify RUT exists in Dentalink
+        let patients: Record<string, unknown>[] = [];
+        const rutFilter = JSON.stringify({ rut: { eq: rut } });
+        const searchUrl = `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rutFilter)}`;
+        const searchRes = await fetch(searchUrl, { headers });
+        const searchData = await searchRes.json();
+        patients = searchData?.data ?? [];
+
+        if (!patients.length) {
+          const buscarUrl = `${DENTALINK_BASE}/pacientes/buscar?rut=${encodeURIComponent(rut)}`;
+          const buscarRes = await fetch(buscarUrl, { headers });
+          const buscarData = await buscarRes.json();
+          patients = buscarData?.data ? (Array.isArray(buscarData.data) ? buscarData.data : [buscarData.data]) : [];
+        }
+
+        if (!patients.length) {
+          return new Response(JSON.stringify({ error: "No se encontró un paciente con ese RUT en nuestros registros" }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const patient = patients[0];
+        const patientName = `${patient.nombre ?? ""} ${patient.apellido ?? ""}`.trim();
+        const passwordHash = await hashPassword(password);
+
+        const { error: insertErr } = await supabaseAdmin
+          .from("patient_credentials")
+          .insert({
+            rut,
+            password_hash: passwordHash,
+            name: patientName,
+            dentalink_patient_id: String(patient.id ?? ""),
+          });
+
+        if (insertErr) {
+          console.error("Insert error:", insertErr);
+          return new Response(JSON.stringify({ error: "Error al crear la cuenta" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        result = { success: true, message: "Cuenta creada. Ya puedes ingresar." };
+        break;
+      }
+
+      /* ── Login: RUT + password → fetch Dentalink data ───────── */
+      case "login_patient_portal": {
+        if (!rut || !password) {
+          return new Response(JSON.stringify({ error: "RUT y contraseña son requeridos" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const { data: cred } = await supabaseAdmin
+          .from("patient_credentials")
+          .select("*")
+          .eq("rut", rut)
+          .maybeSingle();
+
+        if (!cred) {
+          return new Response(JSON.stringify({ error: "No existe una cuenta con ese RUT. Regístrate primero." }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const valid = await verifyPassword(password, cred.password_hash);
+        if (!valid) {
+          return new Response(JSON.stringify({ error: "Contraseña incorrecta" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Fetch data from Dentalink
+        let citas: unknown[] = [];
+        const patientId = cred.dentalink_patient_id;
+        if (patientId) {
+          try {
+            const citasRes = await fetch(`${DENTALINK_BASE}/citas?id_paciente=${patientId}`, { headers });
+            const citasData = await citasRes.json();
+            citas = (citasData?.data ?? []).map((c: Record<string, unknown>) => ({
+              id: String(c.id ?? ""),
+              fecha: c.fecha ?? "",
+              hora: c.hora_inicio ?? "",
+              estado: c.estado ?? "",
+              tratamiento: c.tipo_cita ?? "Consulta",
+              doctor: c.profesional_nombre ?? "",
+              consultorio: c.sucursal_nombre ?? "",
+            }));
+          } catch { /* swallow */ }
+        }
+
+        // Get patient info from Dentalink
+        let patientName = cred.name || rut;
+        let patientEmail = "";
+        let patientPhone = "";
+        if (patientId) {
+          try {
+            const pRes = await fetch(`${DENTALINK_BASE}/pacientes/${patientId}`, { headers });
+            const pData = await pRes.json();
+            const p = pData?.data ?? pData;
+            patientName = `${p.nombre ?? ""} ${p.apellido ?? ""}`.trim() || patientName;
+            patientEmail = p.email ?? "";
+            patientPhone = (p.telefono ?? p.celular ?? "").replace(/\D/g, "");
+          } catch { /* swallow */ }
+        }
+
+        result = {
+          name: patientName,
+          email: patientEmail,
+          phone: patientPhone,
+          citas,
+          radiografias: [],
+          tratamientos: [],
+          pagos: [],
+          recetas: [],
+          consentimientos: [],
+        };
+        break;
+      }
+
+      /* ── Legacy: RUT + phone (keep for backwards compat) ───── */
       case "get_patient_portal": {
         if (!rut || !phone_last4 || phone_last4.length !== 4) {
           return new Response(JSON.stringify({ error: "RUT y últimos 4 dígitos del teléfono son requeridos" }), {
@@ -32,25 +219,17 @@ serve(async (req) => {
           });
         }
 
-        // Search patient by RUT — try JSON filter first, then /buscar fallback
         let patients: Record<string, unknown>[] = [];
-
-        // Attempt 1: filter query
         const rutFilter = JSON.stringify({ rut: { eq: rut } });
         const searchUrl = `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rutFilter)}`;
-        console.log("[portal] attempt1:", searchUrl);
         const searchRes = await fetch(searchUrl, { headers });
         const searchData = await searchRes.json();
-        console.log("[portal] attempt1 status:", searchRes.status, JSON.stringify(searchData).slice(0, 300));
         patients = searchData?.data ?? [];
 
-        // Attempt 2: /buscar endpoint
         if (!patients.length) {
           const buscarUrl = `${DENTALINK_BASE}/pacientes/buscar?rut=${encodeURIComponent(rut)}`;
-          console.log("[portal] attempt2:", buscarUrl);
           const buscarRes = await fetch(buscarUrl, { headers });
           const buscarData = await buscarRes.json();
-          console.log("[portal] attempt2 status:", buscarRes.status, JSON.stringify(buscarData).slice(0, 300));
           patients = buscarData?.data ? (Array.isArray(buscarData.data) ? buscarData.data : [buscarData.data]) : [];
         }
 
@@ -64,22 +243,17 @@ serve(async (req) => {
         const patient = patients[0];
         const patientPhone = (patient.telefono ?? patient.celular ?? "").replace(/\D/g, "");
 
-        // Verify last 4 digits
         if (!patientPhone.endsWith(phone_last4)) {
-          return new Response(JSON.stringify({ error: "Los dígitos del teléfono no coinciden con nuestros registros" }), {
+          return new Response(JSON.stringify({ error: "Los dígitos del teléfono no coinciden" }), {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        // Fetch appointments
         const patientId = patient.id;
         let citas: unknown[] = [];
         try {
-          const citasRes = await fetch(
-            `${DENTALINK_BASE}/citas?id_paciente=${patientId}`,
-            { headers }
-          );
+          const citasRes = await fetch(`${DENTALINK_BASE}/citas?id_paciente=${patientId}`, { headers });
           const citasData = await citasRes.json();
           citas = (citasData?.data ?? []).map((c: Record<string, unknown>) => ({
             id: String(c.id ?? ""),
@@ -108,13 +282,13 @@ serve(async (req) => {
 
       case "create_patient": {
         const { nombre, apellido, telefono, email, rut: pRut } = params || {};
-        const body: Record<string, unknown> = { nombre, apellido, telefono, email };
-        if (pRut) body.rut = pRut;
+        const reqBody: Record<string, unknown> = { nombre, apellido, telefono, email };
+        if (pRut) reqBody.rut = pRut;
 
         const res = await fetch(`${DENTALINK_BASE}/pacientes`, {
           method: "POST",
           headers,
-          body: JSON.stringify(body),
+          body: JSON.stringify(reqBody),
         });
         result = await res.json();
 
