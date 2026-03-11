@@ -68,7 +68,7 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
 };
 
 const routes = [
-  { num: "01", title: "Soy paciente nuevo", desc: "Evaluación completa con IA. Diagnóstico claro y plan personalizado.", back: "Agenda tu hora ahora — 30 min, sin compromiso" },
+  { num: "01", title: "Soy paciente nuevo", desc: "Evaluación completa con IA. Diagnóstico claro y plan personalizado.", back: "Comienza tu evaluación personalizada" },
   { num: "02", title: "Mi portal de paciente", desc: "Accede a tu historial, informes y seguimiento de tratamiento.", back: "Ingresa a tu portal con tus datos" },
   { num: "03", title: "Segunda opinión", desc: "Compara diagnósticos y presupuestos con evidencia científica objetiva.", back: "Sube tu presupuesto y recibe análisis gratuito" },
   { num: "04", title: "Soy de regiones o internacional", desc: "Pre-evaluación remota completa antes de viajar a Santiago.", back: "Evaluación 100% remota con radiografía digital" },
