@@ -1,30 +1,13 @@
 /**
  * MiPerfil — Portal Paciente · Clínica Miró
- * Lee y actualiza tabla `pacientes` del Supabase oficial
- * Supabase ref: jipldlklzobiytkvxokf
- *
- * Tabla requerida (si no existe, crear en Supabase):
- *   CREATE TABLE IF NOT EXISTS pacientes (
- *     id            uuid PRIMARY KEY REFERENCES auth.users(id),
- *     first_name    text,
- *     last_name     text,
- *     phone         text,
- *     address       text,
- *     emergency_contact text,
- *     emergency_phone   text,
- *     created_at    timestamptz DEFAULT now(),
- *     updated_at    timestamptz DEFAULT now()
- *   );
- *   ALTER TABLE pacientes ENABLE ROW LEVEL SECURITY;
- *   CREATE POLICY "own_row" ON pacientes USING (auth.uid() = id);
+ * Uses profiles table (which exists in the DB types) instead of pacientes
  */
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, MapPin, Save, CheckCircle } from "lucide-react";
@@ -35,18 +18,13 @@ interface Profile {
   last_name: string;
   email: string;
   phone: string;
-  address: string;
-  emergency_contact: string;
-  emergency_phone: string;
 }
-
-const EMPTY: Profile = { id: "", first_name: "", last_name: "", email: "", phone: "", address: "", emergency_contact: "", emergency_phone: "" };
 
 const MiPerfil = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<Profile>(EMPTY);
+  const [profile, setProfile] = useState<Profile>({ id: "", first_name: "", last_name: "", email: "", phone: "" });
 
   useEffect(() => { fetchProfile(); }, []);
 
@@ -55,23 +33,21 @@ const MiPerfil = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Use profiles table which exists in the schema
       const { data, error } = await supabase
-        .from("pacientes")
+        .from("profiles" as any)
         .select("*")
         .eq("id", user.id)
         .single();
 
-      if (error && error.code !== "PGRST116") throw error; // PGRST116 = row not found
+      if (error && (error as any).code !== "PGRST116") throw error;
 
       setProfile({
         id: user.id,
-        first_name: data?.first_name ?? "",
-        last_name: data?.last_name ?? "",
+        first_name: (data as any)?.first_name ?? "",
+        last_name: (data as any)?.last_name ?? "",
         email: user.email ?? "",
-        phone: data?.phone ?? "",
-        address: data?.address ?? "",
-        emergency_contact: data?.emergency_contact ?? "",
-        emergency_phone: data?.emergency_phone ?? "",
+        phone: (data as any)?.phone ?? "",
       });
     } catch (err) {
       console.error("fetchProfile:", err);
@@ -81,24 +57,20 @@ const MiPerfil = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProfile(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase.from("pacientes").upsert({
+      const { error } = await (supabase.from("profiles" as any) as any).upsert({
         id: profile.id,
         first_name: profile.first_name,
         last_name: profile.last_name,
         phone: profile.phone,
-        address: profile.address,
-        emergency_contact: profile.emergency_contact,
-        emergency_phone: profile.emergency_phone,
         updated_at: new Date().toISOString(),
       }, { onConflict: "id" });
-
       if (error) throw error;
       toast({ title: "Perfil guardado", description: "Tus datos han sido actualizados." });
     } catch (err) {
@@ -110,107 +82,80 @@ const MiPerfil = () => {
   };
 
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 400 }}>
-      <span style={{ fontFamily: "monospace", fontSize: ".75rem", letterSpacing: ".15em", textTransform: "uppercase", color: "var(--mid)" }}>Cargando perfil…</span>
+    <div className="min-h-[400px] flex items-center justify-center">
+      <span className="font-mono text-xs tracking-widest uppercase text-muted-foreground">Cargando perfil…</span>
     </div>
   );
 
-  const Field = ({ id, label, value, type = "text", disabled = false, placeholder = "" }: any) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: ".4rem" }}>
-      <Label htmlFor={id} style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: ".7rem", letterSpacing: ".1em", textTransform: "uppercase" }}>{label}</Label>
-      <Input id={id} name={id} type={type} value={value} onChange={handleChange} disabled={disabled} placeholder={placeholder}
-        style={{ fontFamily: "var(--font-b)", borderRadius: 0, background: disabled ? "var(--secondary)" : "var(--bg)" }} />
+  const Field = ({ id, label, value, type = "text", disabled = false, placeholder = "" }: { id: string; label: string; value: string; type?: string; disabled?: boolean; placeholder?: string }) => (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id} className="font-display font-bold text-[0.7rem] tracking-widest uppercase">{label}</Label>
+      <Input id={id} name={id} type={type} value={value} onChange={handleChange} disabled={disabled} placeholder={placeholder} style={{ borderRadius: 0 }} className={disabled ? "bg-secondary" : ""} />
     </div>
   );
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <p style={{ fontFamily: "monospace", fontSize: "10px", letterSpacing: ".15em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Portal Paciente</p>
-        <h1 style={{ fontFamily: "var(--font-s)", fontWeight: 300, fontSize: "clamp(1.8rem,4vw,2.5rem)", lineHeight: 1.1 }}>Mi Perfil</h1>
+    <div className="max-w-[860px] mx-auto px-6 py-8">
+      <div className="mb-8">
+        <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent mb-1">Portal Paciente</p>
+        <h1 className="font-serif font-light text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">Mi Perfil</h1>
       </div>
 
-      <Alert style={{ border: "1px solid rgba(201,168,124,.3)", background: "rgba(201,168,124,.05)", borderRadius: 0, marginBottom: "1.5rem" }}>
-        <CheckCircle style={{ width: 16, height: 16, color: "var(--accent)" }} />
-        <AlertDescription style={{ fontFamily: "var(--font-b)", fontSize: ".85rem", color: "var(--dark)" }}>
-          Mantén tus datos actualizados para recordatorios de citas y contacto de emergencia.
+      <Alert className="border-accent/30 bg-accent/5 mb-6" style={{ borderRadius: 0 }}>
+        <CheckCircle className="w-4 h-4 text-accent" />
+        <AlertDescription className="font-body text-sm text-foreground">
+          Mantén tus datos actualizados para recordatorios de citas y contacto.
         </AlertDescription>
       </Alert>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(320px,1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
-        {/* Datos personales */}
-        <Card style={{ borderRadius: 0, border: "1px solid var(--border)" }}>
-          <CardHeader style={{ borderBottom: "1px solid var(--border)", padding: "1.25rem 1.5rem" }}>
-            <CardTitle style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: ".9rem", letterSpacing: ".05em", display: "flex", alignItems: "center", gap: 8 }}>
-              <User style={{ width: 16, height: 16, color: "var(--accent)" }} />Datos Personales
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <Card style={{ borderRadius: 0 }} className="border-border">
+          <CardHeader className="border-b border-border px-6 py-4">
+            <CardTitle className="font-display font-bold text-sm tracking-wider flex items-center gap-2">
+              <User className="w-4 h-4 text-accent" /> Datos Personales
             </CardTitle>
           </CardHeader>
-          <CardContent style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <Field id="first_name" label="Nombre"   value={profile.first_name} placeholder="Tu nombre" />
-              <Field id="last_name"  label="Apellido" value={profile.last_name}  placeholder="Tu apellido" />
+          <CardContent className="p-6 flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Field id="first_name" label="Nombre" value={profile.first_name} placeholder="Tu nombre" />
+              <Field id="last_name" label="Apellido" value={profile.last_name} placeholder="Tu apellido" />
             </div>
             <Field id="email" label="Email" value={profile.email} type="email" disabled />
-            <div style={{ fontFamily: "var(--font-b)", fontSize: ".75rem", color: "var(--mid)", marginTop: -8 }}>El email no se puede modificar</div>
+            <p className="text-xs text-muted-foreground -mt-2">El email no se puede modificar</p>
             <Field id="phone" label="Teléfono" value={profile.phone} type="tel" placeholder="+56 9 1234 5678" />
-            <div style={{ display: "flex", flexDirection: "column", gap: ".4rem" }}>
-              <Label htmlFor="address" style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: ".7rem", letterSpacing: ".1em", textTransform: "uppercase" }}>Dirección</Label>
-              <Textarea id="address" name="address" value={profile.address} onChange={handleChange} placeholder="Tu dirección" rows={3} style={{ fontFamily: "var(--font-b)", borderRadius: 0 }} />
-            </div>
           </CardContent>
         </Card>
 
-        {/* Contacto de emergencia */}
-        <Card style={{ borderRadius: 0, border: "1px solid var(--border)" }}>
-          <CardHeader style={{ borderBottom: "1px solid var(--border)", padding: "1.25rem 1.5rem" }}>
-            <CardTitle style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: ".9rem", letterSpacing: ".05em", display: "flex", alignItems: "center", gap: 8 }}>
-              <Phone style={{ width: 16, height: 16, color: "var(--accent)" }} />Contacto de Emergencia
+        <Card style={{ borderRadius: 0 }} className="border-border">
+          <CardHeader className="border-b border-border px-6 py-4">
+            <CardTitle className="font-display font-bold text-sm tracking-wider flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-accent" /> Clínica Miró
             </CardTitle>
           </CardHeader>
-          <CardContent style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <Field id="emergency_contact" label="Nombre del contacto" value={profile.emergency_contact} placeholder="Nombre completo" />
-            <Field id="emergency_phone"   label="Teléfono"            value={profile.emergency_phone}   type="tel" placeholder="+56 9 1234 5678" />
-            <Alert style={{ border: "1px solid var(--border)", background: "var(--secondary)", borderRadius: 0 }}>
-              <Phone style={{ width: 14, height: 14 }} />
-              <AlertDescription style={{ fontSize: ".8rem", color: "var(--mid)" }}>
-                Este contacto será notificado en emergencias durante tu tratamiento.
-              </AlertDescription>
-            </Alert>
+          <CardContent className="p-6 flex flex-col gap-4">
+            {[
+              { icon: Phone, label: "Nuevos pacientes", val: "+56 9 7415 7966" },
+              { icon: Phone, label: "Pacientes en tratamiento", val: "+56 9 3557 2986" },
+              { icon: Mail, label: "Email", val: "administracion@clinicamiro.cl" },
+              { icon: MapPin, label: "Dirección", val: "Av. Nueva Providencia 2214, Of. 189, Providencia" },
+            ].map(({ icon: Icon, label, val }) => (
+              <div key={label} className="flex gap-3 items-start">
+                <Icon className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-mono text-[0.65rem] tracking-widest uppercase text-muted-foreground mb-0.5">{label}</p>
+                  <p className="font-body text-sm">{val}</p>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Info clínica */}
-      <Card style={{ borderRadius: 0, border: "1px solid var(--border)", marginBottom: "2rem" }}>
-        <CardHeader style={{ borderBottom: "1px solid var(--border)", padding: "1.25rem 1.5rem" }}>
-          <CardTitle style={{ fontFamily: "var(--font-d)", fontWeight: 700, fontSize: ".9rem", letterSpacing: ".05em", display: "flex", alignItems: "center", gap: 8 }}>
-            <MapPin style={{ width: 16, height: 16, color: "var(--accent)" }} />Clínica Miró
-          </CardTitle>
-        </CardHeader>
-        <CardContent style={{ padding: "1.5rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "1.5rem" }}>
-            {[
-              { icon: Phone, label: "Nuevos pacientes",      val: "+56 9 7415 7966" },
-              { icon: Phone, label: "Pacientes en tratamiento", val: "+56 9 3557 2986" },
-              { icon: Mail,  label: "Email",                 val: "administracion@clinicamiro.cl" },
-              { icon: MapPin,label: "Dirección",             val: "Av. Nueva Providencia 2214, Of. 189, Providencia" },
-            ].map(({ icon: Icon, label, val }) => (
-              <div key={label} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                <Icon style={{ width: 16, height: 16, color: "var(--accent)", marginTop: 2, flexShrink: 0 }} />
-                <div>
-                  <p style={{ fontFamily: "monospace", fontSize: ".65rem", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--mid)", marginBottom: 2 }}>{label}</p>
-                  <p style={{ fontFamily: "var(--font-b)", fontSize: ".875rem" }}>{val}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving}
-          style={{ borderRadius: 0, fontFamily: "var(--font-d)", fontWeight: 700, fontSize: ".8rem", letterSpacing: ".12em", textTransform: "uppercase", padding: "1rem 2rem", background: "var(--accent)", color: "var(--accent-fg)", border: "none", opacity: saving ? .6 : 1, cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-          <Save style={{ width: 14, height: 14 }} />
+          className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase flex items-center gap-2"
+          style={{ borderRadius: 0, padding: "1rem 2rem", opacity: saving ? 0.6 : 1 }}>
+          <Save className="w-3.5 h-3.5" />
           {saving ? "Guardando…" : "Guardar Cambios"}
         </Button>
       </div>
