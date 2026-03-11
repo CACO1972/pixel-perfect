@@ -1,166 +1,342 @@
 /**
  * PORTAL PACIENTE — Dashboard principal
  * Acceso: /paciente
- * Auth: Supabase oficial
+ * Auth: RUT + últimos 4 dígitos del teléfono
  */
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Calendar, Phone, User, ExternalLink, AlertCircle } from "lucide-react";
+import { Calendar, User, AlertCircle, FileText, CreditCard, ClipboardList, ShieldCheck, Pill, ArrowLeft, Phone } from "lucide-react";
+import SiteHeader from "@/components/landing/SiteHeader";
 
 const DENTALINK_PROXY = `${import.meta.env.VITE_SUPABASE_URL ?? ""}/functions/v1/dentalink-proxy`;
+
+interface Cita {
+  id: string;
+  fecha: string;
+  hora: string;
+  estado: string;
+  tratamiento: string;
+  doctor: string;
+  consultorio: string;
+}
 
 interface PatientData {
   rut: string;
   name: string;
   email: string;
   phone: string;
-  citas: Array<{
-    id: string;
-    fecha: string;
-    hora: string;
-    estado: string;
-    tratamiento: string;
-    doctor: string;
-    consultorio: string;
-  }>;
+  citas: Cita[];
+  radiografias: Array<{ id: string; fecha: string; tipo: string; url?: string }>;
+  tratamientos: Array<{ id: string; nombre: string; estado: string; progreso: number }>;
+  pagos: Array<{ id: string; fecha: string; monto: number; estado: string; concepto: string }>;
+  recetas: Array<{ id: string; fecha: string; medicamento: string; dosis: string; doctor: string }>;
+  consentimientos: Array<{ id: string; fecha: string; tipo: string; firmado: boolean }>;
 }
 
-/* ── RUT Input inline ─────────────────────────────────────────── */
-const RutInput = ({ onSubmit, loading, error }: { onSubmit: (rut: string) => void; loading: boolean; error: string }) => {
+/* ── Formatear RUT mientras escribe ──────────────────────────── */
+const formatRut = (value: string) => {
+  const clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${formatted}-${dv}`;
+};
+
+/* ── Login con RUT + teléfono ────────────────────────────────── */
+const LoginForm = ({ onSubmit, loading, error }: { onSubmit: (rut: string, phone4: string) => void; loading: boolean; error: string }) => {
   const [rut, setRut] = useState("");
+  const [phone4, setPhone4] = useState("");
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <Card className="w-full max-w-md border-border" style={{ borderRadius: 0 }}>
-        <CardHeader className="border-b border-border">
-          <CardTitle className="font-display font-bold text-sm tracking-wider uppercase flex items-center gap-2">
-            <User className="w-4 h-4 text-accent" /> Ingresa tu RUT
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <Label className="font-display font-bold text-[0.7rem] tracking-widest uppercase">RUT (sin puntos, con guión)</Label>
-            <Input value={rut} onChange={e => setRut(e.target.value)} placeholder="12345678-9" style={{ borderRadius: 0 }} />
-          </div>
-          {error && (
-            <Alert variant="destructive" style={{ borderRadius: 0 }}>
-              <AlertCircle className="w-4 h-4" />
-              <AlertDescription className="text-sm">{error}</AlertDescription>
-            </Alert>
-          )}
-          <Button onClick={() => onSubmit(rut)} disabled={loading || !rut.trim()}
-            className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase"
-            style={{ borderRadius: 0 }}>
-            {loading ? "Buscando…" : "Buscar"}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <SiteHeader />
+      <div className="min-h-screen flex items-center justify-center p-6 pt-24">
+        <Card className="w-full max-w-md border-border" style={{ borderRadius: 0 }}>
+          <CardHeader className="border-b border-border pb-4">
+            <CardTitle className="font-display font-bold text-sm tracking-wider uppercase flex items-center gap-2">
+              <User className="w-4 h-4 text-accent" /> Portal Paciente
+            </CardTitle>
+            <p className="font-body text-xs text-muted-foreground mt-1">
+              Ingresa tu RUT y los últimos 4 dígitos de tu teléfono registrado
+            </p>
+          </CardHeader>
+          <CardContent className="p-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <Label className="font-display font-bold text-[0.7rem] tracking-widest uppercase">RUT</Label>
+              <Input
+                value={rut}
+                onChange={e => setRut(formatRut(e.target.value))}
+                placeholder="12.345.678-9"
+                maxLength={12}
+                style={{ borderRadius: 0 }}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="font-display font-bold text-[0.7rem] tracking-widest uppercase flex items-center gap-1">
+                <Phone className="w-3 h-3" /> Últimos 4 dígitos de tu teléfono
+              </Label>
+              <Input
+                value={phone4}
+                onChange={e => setPhone4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="7966"
+                maxLength={4}
+                inputMode="numeric"
+                style={{ borderRadius: 0 }}
+              />
+            </div>
+            {error && (
+              <Alert variant="destructive" style={{ borderRadius: 0 }}>
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription className="text-sm">{error}</AlertDescription>
+              </Alert>
+            )}
+            <Button
+              onClick={() => onSubmit(rut, phone4)}
+              disabled={loading || !rut.trim() || phone4.length !== 4}
+              className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase"
+              style={{ borderRadius: 0 }}
+            >
+              {loading ? "Verificando…" : "Ingresar"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
 
-/* ── Simple Dashboard inline ─────────────────────────────────── */
-const PatientDashboardView = ({ data, onClose }: { data: PatientData; onClose: () => void; }) => (
-  <div className="max-w-[860px] mx-auto p-6">
-    <div className="mb-8">
-      <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent mb-1">Portal Paciente</p>
-      <h1 className="font-serif font-light text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">{data.name}</h1>
-      <p className="font-body text-sm text-muted-foreground mt-1">{data.email} · {data.phone}</p>
-    </div>
-
-    <div className="flex flex-col gap-px bg-border mb-6">
-      {data.citas.length > 0 ? data.citas.map(c => (
-        <div key={c.id} className="bg-background p-5 flex flex-col gap-2">
-          <div className="flex justify-between items-start flex-wrap gap-2">
-            <div>
-              <span className="font-display font-bold text-sm">{c.tratamiento || "Consulta"}</span>
-              <span className="block font-body text-xs text-muted-foreground mt-0.5">{c.fecha} · {c.hora}</span>
-            </div>
-            <span className="font-mono text-[0.65rem] tracking-widest uppercase px-2 py-1 bg-secondary text-secondary-foreground">{c.estado}</span>
-          </div>
-          <span className="font-body text-xs text-muted-foreground">Dr. {c.doctor} · {c.consultorio}</span>
-        </div>
-      )) : (
-        <div className="bg-background p-12 text-center">
-          <Calendar className="w-10 h-10 mx-auto mb-3 text-accent opacity-40" />
-          <p className="font-body text-muted-foreground">No hay citas registradas</p>
-        </div>
-      )}
-    </div>
-
-    <div className="flex gap-3">
-      <a href="https://ff.healthatom.io/41knMr" target="_blank" rel="noopener noreferrer">
-        <Button className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase" style={{ borderRadius: 0 }}>
-          <Calendar className="w-3.5 h-3.5 mr-1.5" /> Agendar Cita
-        </Button>
-      </a>
-      <Button variant="outline" onClick={onClose} className="font-display font-bold text-xs tracking-widest uppercase" style={{ borderRadius: 0 }}>
-        Volver
-      </Button>
-    </div>
+/* ── Sección reutilizable ────────────────────────────────────── */
+const Section = ({ title, icon: Icon, children, empty }: { title: string; icon: typeof Calendar; children?: React.ReactNode; empty?: string }) => (
+  <div className="mb-6">
+    <h2 className="font-display font-bold text-xs tracking-widest uppercase flex items-center gap-2 mb-3 text-foreground">
+      <Icon className="w-4 h-4 text-accent" /> {title}
+    </h2>
+    {children || (
+      <div className="border border-border p-8 text-center">
+        <p className="font-body text-sm text-muted-foreground">{empty || "Sin registros"}</p>
+      </div>
+    )}
   </div>
+);
+
+/* ── Dashboard completo ──────────────────────────────────────── */
+const PatientDashboardView = ({ data, onClose }: { data: PatientData; onClose: () => void }) => (
+  <>
+    <SiteHeader />
+    <div className="max-w-[860px] mx-auto p-6 pt-24 pb-20">
+      {/* Header */}
+      <div className="mb-8">
+        <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-accent mb-1">Portal Paciente</p>
+        <h1 className="font-serif font-light text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">{data.name}</h1>
+        <p className="font-body text-sm text-muted-foreground mt-1">{data.email} · ···· {data.phone.slice(-4)}</p>
+      </div>
+
+      {/* Citas */}
+      <Section title="Citas" icon={Calendar}>
+        {data.citas.length > 0 ? (
+          <div className="flex flex-col gap-px bg-border">
+            {data.citas.map(c => (
+              <div key={c.id} className="bg-background p-4 flex flex-col gap-1">
+                <div className="flex justify-between items-start flex-wrap gap-2">
+                  <div>
+                    <span className="font-display font-bold text-sm">{c.tratamiento || "Consulta"}</span>
+                    <span className="block font-body text-xs text-muted-foreground mt-0.5">{c.fecha} · {c.hora}</span>
+                  </div>
+                  <span className="font-mono text-[0.65rem] tracking-widest uppercase px-2 py-1 bg-secondary text-secondary-foreground">{c.estado}</span>
+                </div>
+                <span className="font-body text-xs text-muted-foreground">Dr. {c.doctor} · {c.consultorio}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {data.citas.length === 0 && (
+          <div className="border border-border p-8 text-center">
+            <Calendar className="w-8 h-8 mx-auto mb-2 text-accent opacity-40" />
+            <p className="font-body text-sm text-muted-foreground">No hay citas registradas</p>
+          </div>
+        )}
+      </Section>
+
+      {/* Radiografías */}
+      <Section title="Radiografías" icon={FileText} empty="No hay radiografías disponibles">
+        {data.radiografias.length > 0 && (
+          <div className="flex flex-col gap-px bg-border">
+            {data.radiografias.map(r => (
+              <div key={r.id} className="bg-background p-4 flex justify-between items-center">
+                <div>
+                  <span className="font-display font-bold text-sm">{r.tipo}</span>
+                  <span className="block font-body text-xs text-muted-foreground">{r.fecha}</span>
+                </div>
+                {r.url && (
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-accent text-xs font-display font-bold tracking-widest uppercase hover:underline">
+                    Ver
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Tratamientos */}
+      <Section title="Plan de tratamiento" icon={ClipboardList} empty="Sin tratamientos activos">
+        {data.tratamientos.length > 0 && (
+          <div className="flex flex-col gap-px bg-border">
+            {data.tratamientos.map(t => (
+              <div key={t.id} className="bg-background p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-display font-bold text-sm">{t.nombre}</span>
+                  <span className="font-mono text-[0.65rem] tracking-widest uppercase px-2 py-1 bg-secondary text-secondary-foreground">{t.estado}</span>
+                </div>
+                <div className="w-full bg-secondary h-1.5">
+                  <div className="bg-accent h-1.5 transition-all" style={{ width: `${t.progreso}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Pagos */}
+      <Section title="Historial de pagos" icon={CreditCard} empty="Sin pagos registrados">
+        {data.pagos.length > 0 && (
+          <div className="flex flex-col gap-px bg-border">
+            {data.pagos.map(p => (
+              <div key={p.id} className="bg-background p-4 flex justify-between items-center">
+                <div>
+                  <span className="font-display font-bold text-sm">{p.concepto}</span>
+                  <span className="block font-body text-xs text-muted-foreground">{p.fecha}</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-sm font-bold">${p.monto.toLocaleString("es-CL")}</span>
+                  <span className={`block font-mono text-[0.6rem] tracking-widest uppercase ${p.estado === "pagado" ? "text-[hsl(var(--status-success))]" : "text-[hsl(var(--status-warning))]"}`}>
+                    {p.estado}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Recetas */}
+      <Section title="Recetas" icon={Pill} empty="Sin recetas">
+        {data.recetas.length > 0 && (
+          <div className="flex flex-col gap-px bg-border">
+            {data.recetas.map(r => (
+              <div key={r.id} className="bg-background p-4">
+                <span className="font-display font-bold text-sm">{r.medicamento}</span>
+                <span className="block font-body text-xs text-muted-foreground">{r.dosis} · Dr. {r.doctor} · {r.fecha}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Consentimientos */}
+      <Section title="Consentimientos informados" icon={ShieldCheck} empty="Sin consentimientos">
+        {data.consentimientos.length > 0 && (
+          <div className="flex flex-col gap-px bg-border">
+            {data.consentimientos.map(c => (
+              <div key={c.id} className="bg-background p-4 flex justify-between items-center">
+                <div>
+                  <span className="font-display font-bold text-sm">{c.tipo}</span>
+                  <span className="block font-body text-xs text-muted-foreground">{c.fecha}</span>
+                </div>
+                <span className={`font-mono text-[0.65rem] tracking-widest uppercase px-2 py-1 ${c.firmado ? "bg-[hsl(var(--status-success)/0.1)] text-[hsl(var(--status-success))]" : "bg-secondary text-secondary-foreground"}`}>
+                  {c.firmado ? "Firmado" : "Pendiente"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+
+      {/* Actions */}
+      <div className="flex gap-3 flex-wrap">
+        <a href="https://ff.healthatom.io/41knMr" target="_blank" rel="noopener noreferrer">
+          <Button className="bg-accent text-accent-foreground font-display font-bold text-xs tracking-widest uppercase" style={{ borderRadius: 0 }}>
+            <Calendar className="w-3.5 h-3.5 mr-1.5" /> Agendar Cita
+          </Button>
+        </a>
+        <a href="https://wa.me/56974157966" target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" className="font-display font-bold text-xs tracking-widest uppercase" style={{ borderRadius: 0 }}>
+            <Phone className="w-3.5 h-3.5 mr-1.5" /> Contactar
+          </Button>
+        </a>
+        <Button variant="outline" onClick={onClose} className="font-display font-bold text-xs tracking-widest uppercase" style={{ borderRadius: 0 }}>
+          <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Salir
+        </Button>
+      </div>
+    </div>
+  </>
 );
 
 /* ── Main component ───────────────────────────────────────────── */
 const PacienteDashboard = () => {
-  const navigate = useNavigate();
-  const [session, setSession] = useState<unknown>(null);
-  const [step, setStep] = useState<"rut" | "dashboard">("rut");
+  const [step, setStep] = useState<"login" | "dashboard">("login");
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [authLoading, setAuthLoading] = useState(true);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setAuthLoading(false);
-      if (!session) navigate("/evaluacion");
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) navigate("/evaluacion");
-    });
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleRutSubmit = async (rut: string) => {
+  const handleLogin = async (rut: string, phone4: string) => {
     setLoading(true);
     setError("");
+
+    // Clean RUT for API
+    const cleanRut = rut.replace(/\./g, "").trim();
+
+    if (!/^\d{7,8}-[\dkK]$/i.test(cleanRut)) {
+      setError("Formato de RUT inválido");
+      setLoading(false);
+      return;
+    }
+    if (!/^\d{4}$/.test(phone4)) {
+      setError("Ingresa los 4 últimos dígitos de tu teléfono");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(DENTALINK_PROXY, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token ?? ""}`,
-        },
-        body: JSON.stringify({ action: "get_patient", rut }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_patient_portal", rut: cleanRut, phone_last4: phone4 }),
       });
-      if (!res.ok) throw new Error("No se encontró el paciente");
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "No se pudo verificar tu identidad");
+      }
+
       const data = await res.json();
-      setPatientData({ rut, name: data.name ?? rut, email: data.email ?? "", phone: data.phone ?? "", citas: data.citas ?? [] });
+      setPatientData({
+        rut: cleanRut,
+        name: data.name ?? cleanRut,
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        citas: data.citas ?? [],
+        radiografias: data.radiografias ?? [],
+        tratamientos: data.tratamientos ?? [],
+        pagos: data.pagos ?? [],
+        recetas: data.recetas ?? [],
+        consentimientos: data.consentimientos ?? [],
+      });
       setStep("dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al obtener datos");
+      setError(err instanceof Error ? err.message : "Error al verificar identidad");
     } finally {
       setLoading(false);
     }
   };
 
-  if (authLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <span className="font-mono text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Verificando acceso...</span>
-    </div>
-  );
-  if (!session) return null;
-  if (step === "rut") return <RutInput onSubmit={handleRutSubmit} loading={loading} error={error} />;
-  if (step === "dashboard" && patientData) return <PatientDashboardView data={patientData} onClose={() => { setStep("rut"); setPatientData(null); }} />;
+  if (step === "login") return <LoginForm onSubmit={handleLogin} loading={loading} error={error} />;
+  if (step === "dashboard" && patientData) return <PatientDashboardView data={patientData} onClose={() => { setStep("login"); setPatientData(null); }} />;
   return null;
 };
 

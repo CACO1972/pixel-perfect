@@ -16,9 +16,6 @@ const NotFound      = lazy(() => import("./pages/NotFound"));
 
 // ── Portal Paciente ────────────────────────────────────────────────────────────
 const PacienteDashboard  = lazy(() => import("./pages/paciente/Dashboard"));
-const PacienteMisCitas   = lazy(() => import("./pages/paciente/MisCitas"));
-const PacienteAsesor     = lazy(() => import("./pages/paciente/AsesorVirtual"));
-const PacientePerfil     = lazy(() => import("./pages/paciente/MiPerfil"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,10 +49,7 @@ const App = () => (
             <Route path="/pago-exitoso"    element={<Gracias />} />
 
             {/* Portal Paciente */}
-            <Route path="/paciente"          element={<PacienteDashboard />} />
-            <Route path="/paciente/citas"    element={<PacienteMisCitas />} />
-            <Route path="/paciente/asesor"   element={<PacienteAsesor />} />
-            <Route path="/paciente/perfil"   element={<PacientePerfil />} />
+            <Route path="/paciente" element={<PacienteDashboard />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
