@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, amount, subject, commerceOrder, nombre, telefono, urlReturn } = await req.json();
+    const { email, amount, subject, commerceOrder, nombre, telefono, rut, urlReturn } = await req.json();
 
     if (!email || !amount || !commerceOrder) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -27,16 +27,21 @@ serve(async (req) => {
     const SITE_URL = Deno.env.get("SITE_URL") || "https://clinicamiro.cl";
 
     // Build params for Flow.cl
+    // urlConfirmation → edge function flow-webhook
+    const SUPABASE_FUNC_URL = "https://jipldlklzobiytkvxokf.supabase.co/functions/v1";
+    const extra: Record<string, string> = { nombre, telefono };
+    if (rut) extra.rut = rut;
+
     const params: Record<string, string> = {
       apiKey: FLOW_API_KEY,
       commerceOrder,
-      subject: subject || "Evaluación Dental Premium",
+      subject: subject || "Evaluación Dental Premium - Clínica Miró",
       currency: "CLP",
       amount: String(amount),
       email,
-      urlConfirmation: `${SITE_URL}/api/flow-confirm`,
-      urlReturn: urlReturn || `${SITE_URL}/pago-exitoso`,
-      optional: JSON.stringify({ nombre, telefono }),
+      urlConfirmation: `${SUPABASE_FUNC_URL}/flow-webhook`,
+      urlReturn: urlReturn || `${SITE_URL}/gracias`,
+      optional: JSON.stringify(extra),
     };
 
     // Sort params alphabetically and create signature string

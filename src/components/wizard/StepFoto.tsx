@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { analyzeDental, type DentalAnalysis, type DentalHallazgo } from "@/lib/api";
+import { analyzeDental, type DentalAnalysis, type DentalHallazgo, type ImplantXScore } from "@/lib/api";
 import type { WizardData } from "@/pages/Evaluacion";
 import CameraCapture from "./CameraCapture";
 
@@ -92,7 +92,11 @@ const StepFoto = ({ data, update, next, back }: Props) => {
     update({ fotoBase64: base64 });
 
     try {
-      const result = await analyzeDental(base64);
+      const result = await analyzeDental(base64, {
+        motivo: data.motivo,
+        sintomas: data.sintomas,
+        zona: data.zona,
+      });
       update({ analisis: result });
     } catch (err) {
       setError("Error al analizar la imagen. Intenta de nuevo.");
@@ -339,6 +343,41 @@ const StepFoto = ({ data, update, next, back }: Props) => {
           <p className="text-[0.75rem] text-mid-gray italic leading-relaxed border-l-2 border-accent/30 pl-4">
             Este análisis es orientativo. La evaluación clínica presencial confirmará los hallazgos.
           </p>
+
+          {/* ImplantX Score — shown when ausencia dental detected */}
+          {analisis.implantxScore && (
+            <div className="border border-accent/30 bg-accent/5 p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-accent">ImplantX · HUMANA.AI</span>
+                <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-display font-bold text-[1rem]">{analisis.implantxScore.etiqueta}</p>
+                  <p className="text-[0.8rem] text-mid-gray mt-0.5">{analisis.implantxScore.recomendacion}</p>
+                </div>
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center font-display font-[800] text-[1.5rem] border-2 ${
+                  analisis.implantxScore.nivel <= 2 ? "border-status-success text-status-success bg-status-success/10" :
+                  analisis.implantxScore.nivel === 3 ? "border-status-warning text-status-warning bg-status-warning/10" :
+                  "border-status-urgent text-status-urgent bg-status-urgent/10"
+                }`}>
+                  {analisis.implantxScore.nivel}/5
+                </div>
+              </div>
+              {analisis.implantxScore.factores.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {analisis.implantxScore.factores.map((f, i) => (
+                    <span key={i} className="text-[0.7rem] font-mono px-2 py-0.5 bg-foreground/5 border border-border">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-[0.7rem] text-mid-gray italic">
+                Score calculado con {analisis.implantxScore.factores.length > 0 ? `${analisis.implantxScore.factores.length} factores de riesgo detectados` : "datos disponibles"}. La evaluación presencial ajusta el score.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

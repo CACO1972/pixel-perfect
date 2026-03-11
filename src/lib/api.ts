@@ -33,6 +33,7 @@ export const createPayment = (data: {
   commerceOrder: string;
   nombre: string;
   telefono: string;
+  rut?: string;
   urlReturn?: string;
 }) => post<FlowPaymentResponse>("flow-create-payment", data);
 
@@ -46,6 +47,15 @@ export interface DentalHallazgo {
   recomendacionEspecifica: string;
 }
 
+export interface ImplantXScore {
+  nivel: 1 | 2 | 3 | 4 | 5;
+  etiqueta: string;
+  score: number;
+  factores: string[];
+  recomendacion: string;
+  viable: boolean;
+}
+
 export interface DentalAnalysis {
   analisisValido: boolean;
   mensajeGeneral: string;
@@ -54,10 +64,15 @@ export interface DentalAnalysis {
   recomendacion: string;
   proximosPasos: string[];
   calidadImagen: string;
+  ausenciaDental?: boolean;
+  riesgoImplante?: { detectado: boolean; notas: string };
+  implantxScore?: ImplantXScore;
 }
 
-export const analyzeDental = (imageBase64: string) =>
-  post<DentalAnalysis>("analyze-dental", { imageBase64 });
+export const analyzeDental = (
+  imageBase64: string,
+  wizardData?: Record<string, unknown>,
+) => post<DentalAnalysis>("analyze-dental", { imageBase64, wizardData });
 
 // Dentalink proxy
 export const dentalinkProxy = (action: string, params?: Record<string, unknown>) =>

@@ -77,6 +77,7 @@ const StepResumen = ({ data, back }: Props) => {
         commerceOrder: orderId,
         nombre,
         telefono,
+        rut: data.rut?.trim() || undefined,
         urlReturn: returnUrl,
       });
 
