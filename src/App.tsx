@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { ThemeProvider } from "next-themes";
 
 // ── Main pages ────────────────────────────────────────────────────────────────
 const Index         = lazy(() => import("./pages/Index"));
@@ -35,13 +36,14 @@ const Loader = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<Loader />}>
-          <Routes>
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<Loader />}>
+            <Routes>
             {/* Landing */}
             <Route path="/"                element={<Index />} />
             <Route path="/evaluacion"      element={<Evaluacion />} />
@@ -59,10 +61,11 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
