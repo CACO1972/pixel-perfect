@@ -229,9 +229,14 @@ const StepFoto = ({ data, update, next, back }: Props) => {
       {error && (
         <div className="text-center py-8">
           <p className="text-destructive font-medium mb-4">{error}</p>
-          <button onClick={() => { update({ fotoBase64: null, analisis: null }); setShowCamera(true); }} className="text-accent underline text-[0.9rem]">
-            Intentar de nuevo
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            <button onClick={() => { update({ fotoBase64: null, analisis: null }); setError(""); setShowCamera(true); }} className="px-6 py-2.5 bg-accent text-white font-display font-bold text-[0.8rem] tracking-[0.05em] uppercase hover:bg-accent/90 transition-colors">
+              Tomar otra foto
+            </button>
+            <button onClick={() => { update({ fotoBase64: null, analisis: null }); setError(""); fileRef.current?.click(); }} className="text-accent underline text-[0.85rem]">
+              Subir otra imagen
+            </button>
+          </div>
         </div>
       )}
 
