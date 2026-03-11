@@ -289,8 +289,8 @@ const PacienteDashboard = () => {
     setLoading(true);
     setError("");
 
-    // Clean RUT for API
-    const cleanRut = rut.replace(/\./g, "").trim();
+    // RUT already without dots
+    const cleanRut = rut.trim();
 
     if (!/^\d{7,8}-[\dkK]$/i.test(cleanRut)) {
       setError("Formato de RUT inválido");
