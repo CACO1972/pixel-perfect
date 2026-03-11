@@ -229,9 +229,14 @@ const StepFoto = ({ data, update, next, back }: Props) => {
       {error && (
         <div className="text-center py-8">
           <p className="text-destructive font-medium mb-4">{error}</p>
-          <button onClick={() => { update({ fotoBase64: null, analisis: null }); setShowCamera(true); }} className="text-accent underline text-[0.9rem]">
-            Intentar de nuevo
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            <button onClick={() => { update({ fotoBase64: null, analisis: null }); setError(""); setShowCamera(true); }} className="px-6 py-2.5 bg-accent text-white font-display font-bold text-[0.8rem] tracking-[0.05em] uppercase hover:bg-accent/90 transition-colors">
+              Tomar otra foto
+            </button>
+            <button onClick={() => { update({ fotoBase64: null, analisis: null }); setError(""); fileRef.current?.click(); }} className="text-accent underline text-[0.85rem]">
+              Subir otra imagen
+            </button>
+          </div>
         </div>
       )}
 
@@ -343,6 +348,22 @@ const StepFoto = ({ data, update, next, back }: Props) => {
           <p className="text-[0.75rem] text-mid-gray italic leading-relaxed border-l-2 border-accent/30 pl-4">
             Este análisis es orientativo. La evaluación clínica presencial confirmará los hallazgos.
           </p>
+
+          {/* Retake / re-upload */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { update({ fotoBase64: null, analisis: null }); setShowCamera(true); }}
+              className="flex-1 py-2.5 border border-accent/40 text-accent font-display font-bold text-[0.8rem] tracking-[0.05em] uppercase hover:bg-accent/10 transition-colors"
+            >
+              Tomar otra foto
+            </button>
+            <button
+              onClick={() => { update({ fotoBase64: null, analisis: null }); fileRef.current?.click(); }}
+              className="flex-1 py-2.5 border border-border text-mid-gray font-display text-[0.8rem] tracking-[0.05em] uppercase hover:border-accent/30 hover:text-foreground transition-colors"
+            >
+              Subir otra imagen
+            </button>
+          </div>
 
           {/* ImplantX Score — shown when ausencia dental detected */}
           {analisis.implantxScore && (
