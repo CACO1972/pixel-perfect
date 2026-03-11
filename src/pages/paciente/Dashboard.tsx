@@ -39,12 +39,13 @@ interface PatientData {
 
 /* ── Formatear RUT mientras escribe ──────────────────────────── */
 const formatRut = (value: string) => {
-  const clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
-  if (clean.length <= 1) return clean;
-  const body = clean.slice(0, -1);
-  const dv = clean.slice(-1);
-  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${formatted}-${dv}`;
+  const clean = value.replace(/[^0-9kK-]/g, "").toUpperCase();
+  // Remove all hyphens to rebuild
+  const digits = clean.replace(/-/g, "");
+  if (digits.length <= 1) return digits;
+  const body = digits.slice(0, -1);
+  const dv = digits.slice(-1);
+  return `${body}-${dv}`;
 };
 
 /* ── Login con RUT + teléfono ────────────────────────────────── */
@@ -71,8 +72,8 @@ const LoginForm = ({ onSubmit, loading, error }: { onSubmit: (rut: string, phone
               <Input
                 value={rut}
                 onChange={e => setRut(formatRut(e.target.value))}
-                placeholder="12.345.678-9"
-                maxLength={12}
+                placeholder="12345678-9"
+                maxLength={10}
                 style={{ borderRadius: 0 }}
               />
             </div>
@@ -288,8 +289,8 @@ const PacienteDashboard = () => {
     setLoading(true);
     setError("");
 
-    // Clean RUT for API
-    const cleanRut = rut.replace(/\./g, "").trim();
+    // RUT already without dots
+    const cleanRut = rut.trim();
 
     if (!/^\d{7,8}-[\dkK]$/i.test(cleanRut)) {
       setError("Formato de RUT inválido");
