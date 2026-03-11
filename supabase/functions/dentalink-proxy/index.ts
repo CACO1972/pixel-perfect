@@ -34,12 +34,13 @@ serve(async (req) => {
 
         // Search patient by RUT using Dentalink JSON filter syntax
         const rutFilter = JSON.stringify({ rut: { eq: rut } });
-        const searchRes = await fetch(
-          `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rutFilter)}`,
-          { headers }
-        );
+        const searchUrl = `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rutFilter)}`;
+        console.log("[portal] searching:", searchUrl);
+        const searchRes = await fetch(searchUrl, { headers });
         const searchData = await searchRes.json();
+        console.log("[portal] response status:", searchRes.status, "data keys:", Object.keys(searchData));
         const patients = searchData?.data ?? [];
+        console.log("[portal] patients found:", patients.length);
 
         if (!patients.length) {
           return new Response(JSON.stringify({ error: "No se encontró un paciente con ese RUT" }), {
