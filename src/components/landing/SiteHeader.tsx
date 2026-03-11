@@ -37,6 +37,10 @@ const SiteHeader = () => {
           <a href="https://wa.me/56974157966" target="_blank" rel="noopener noreferrer" className="text-[0.8rem] tracking-[0.12em] uppercase text-mid-gray no-underline hover:text-foreground transition-colors">
             Contacto
           </a>
+          <a href="/paciente" className="text-[0.8rem] tracking-[0.12em] uppercase text-mid-gray no-underline hover:text-foreground transition-colors flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            Mi Portal
+          </a>
           <a href="/evaluacion" className="text-[0.75rem] tracking-[0.12em] uppercase px-6 py-2.5 bg-accent text-accent-foreground no-underline hover:opacity-90 hover:-translate-y-px transition-all">
             Comenzar evaluación →
           </a>
