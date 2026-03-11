@@ -31,7 +31,6 @@ const StepMotivo = ({ data, update, next }: Props) => (
             data.motivo === m.id ? "border-accent bg-accent/5" : "border-border"
           }`}
         >
-          <span className="text-2xl">{m.icon}</span>
           <span className="font-display font-semibold text-[0.95rem]">{m.label}</span>
         </button>
       ))}
