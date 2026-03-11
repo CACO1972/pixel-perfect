@@ -35,7 +35,7 @@ serve(async (req) => {
       amount: String(amount),
       email,
       urlConfirmation: `${SITE_URL}/api/flow-confirm`,
-      urlReturn: urlReturn || `${SITE_URL}/gracias`,
+      urlReturn: urlReturn || `${SITE_URL}/pago-exitoso`,
       optional: JSON.stringify({ nombre, telefono }),
     };
 
