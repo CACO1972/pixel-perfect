@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, params } = await req.json();
+    const { action, params, rut, phone_last4 } = await req.json();
     const TOKEN = Deno.env.get("DENTALINK_TOKEN")!;
     const headers = {
       Authorization: `Token ${TOKEN}`,
@@ -23,15 +23,79 @@ serve(async (req) => {
     let result: unknown;
 
     switch (action) {
-      case "create_patient": {
-        const { nombre, apellido, telefono, email, rut } = params || {};
-        const body: Record<string, unknown> = {
-          nombre,
-          apellido,
-          telefono,
-          email,
+      /* ── Portal Paciente: lookup + verify phone ─────────────── */
+      case "get_patient_portal": {
+        if (!rut || !phone_last4 || phone_last4.length !== 4) {
+          return new Response(JSON.stringify({ error: "RUT y últimos 4 dígitos del teléfono son requeridos" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Search patient by RUT
+        const searchRes = await fetch(
+          `${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rut)}`,
+          { headers }
+        );
+        const searchData = await searchRes.json();
+        const patients = searchData?.data ?? [];
+
+        if (!patients.length) {
+          return new Response(JSON.stringify({ error: "No se encontró un paciente con ese RUT" }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const patient = patients[0];
+        const patientPhone = (patient.telefono ?? patient.celular ?? "").replace(/\D/g, "");
+
+        // Verify last 4 digits
+        if (!patientPhone.endsWith(phone_last4)) {
+          return new Response(JSON.stringify({ error: "Los dígitos del teléfono no coinciden con nuestros registros" }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Fetch appointments
+        const patientId = patient.id;
+        let citas: unknown[] = [];
+        try {
+          const citasRes = await fetch(
+            `${DENTALINK_BASE}/citas?id_paciente=${patientId}`,
+            { headers }
+          );
+          const citasData = await citasRes.json();
+          citas = (citasData?.data ?? []).map((c: Record<string, unknown>) => ({
+            id: String(c.id ?? ""),
+            fecha: c.fecha ?? "",
+            hora: c.hora_inicio ?? "",
+            estado: c.estado ?? "",
+            tratamiento: c.tipo_cita ?? "Consulta",
+            doctor: c.profesional_nombre ?? "",
+            consultorio: c.sucursal_nombre ?? "",
+          }));
+        } catch { /* swallow */ }
+
+        result = {
+          name: `${patient.nombre ?? ""} ${patient.apellido ?? ""}`.trim(),
+          email: patient.email ?? "",
+          phone: patientPhone,
+          citas,
+          radiografias: [],
+          tratamientos: [],
+          pagos: [],
+          recetas: [],
+          consentimientos: [],
         };
-        if (rut) body.rut = rut;
+        break;
+      }
+
+      case "create_patient": {
+        const { nombre, apellido, telefono, email, rut: pRut } = params || {};
+        const body: Record<string, unknown> = { nombre, apellido, telefono, email };
+        if (pRut) body.rut = pRut;
 
         const res = await fetch(`${DENTALINK_BASE}/pacientes`, {
           method: "POST",
@@ -40,11 +104,8 @@ serve(async (req) => {
         });
         result = await res.json();
 
-        // If patient already exists (409), try to find them
-        if (res.status === 409 && rut) {
-          const searchRes = await fetch(`${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(rut)}`, {
-            headers,
-          });
+        if (res.status === 409 && pRut) {
+          const searchRes = await fetch(`${DENTALINK_BASE}/pacientes?q=${encodeURIComponent(pRut)}`, { headers });
           const searchData = await searchRes.json();
           result = { existing: true, ...searchData };
         }
