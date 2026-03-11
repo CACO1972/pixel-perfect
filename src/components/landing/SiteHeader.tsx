@@ -6,6 +6,9 @@ import logoIcon from "@/assets/logo-icon.png";
 const SiteHeader = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
