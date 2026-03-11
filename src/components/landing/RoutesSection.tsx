@@ -32,7 +32,7 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
       >
         {/* Front */}
         <a
-          href="#form"
+          href={route.href || "#"}
           className="flex items-center justify-between py-6 md:py-10 no-underline text-foreground relative"
           style={{ backfaceVisibility: "hidden" }}
         >
