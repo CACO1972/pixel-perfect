@@ -36,13 +36,14 @@ const Loader = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<Loader />}>
-          <Routes>
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<Loader />}>
+            <Routes>
             {/* Landing */}
             <Route path="/"                element={<Index />} />
             <Route path="/evaluacion"      element={<Evaluacion />} />
