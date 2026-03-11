@@ -39,12 +39,13 @@ interface PatientData {
 
 /* ── Formatear RUT mientras escribe ──────────────────────────── */
 const formatRut = (value: string) => {
-  const clean = value.replace(/[^0-9kK]/g, "").toUpperCase();
-  if (clean.length <= 1) return clean;
-  const body = clean.slice(0, -1);
-  const dv = clean.slice(-1);
-  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${formatted}-${dv}`;
+  const clean = value.replace(/[^0-9kK-]/g, "").toUpperCase();
+  // Remove all hyphens to rebuild
+  const digits = clean.replace(/-/g, "");
+  if (digits.length <= 1) return digits;
+  const body = digits.slice(0, -1);
+  const dv = digits.slice(-1);
+  return `${body}-${dv}`;
 };
 
 /* ── Login con RUT + teléfono ────────────────────────────────── */
