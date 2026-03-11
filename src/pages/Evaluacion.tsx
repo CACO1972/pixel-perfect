@@ -66,9 +66,20 @@ const Evaluacion = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 py-4 bg-background/95 backdrop-blur-xl border-b border-border/40">
         <div className="container flex items-center justify-between">
-          <a href="/" className="font-serif font-light text-[1.3rem] tracking-[0.04em] text-foreground no-underline">
-            Clínica Miró<span className="text-accent">.</span>
-          </a>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => window.history.back()}
+              className="group flex items-center justify-center w-8 h-8 border border-border/60 hover:border-accent transition-colors"
+              aria-label="Volver"
+            >
+              <svg className="w-4 h-4 text-muted-foreground group-hover:text-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+            </button>
+            <a href="/" className="font-serif font-light text-[1.3rem] tracking-[0.04em] text-foreground no-underline">
+              Clínica Miró<span className="text-accent">.</span>
+            </a>
+          </div>
           <span className="text-[0.75rem] tracking-[0.12em] uppercase text-mid-gray font-display">
             Evaluación Premium
           </span>
