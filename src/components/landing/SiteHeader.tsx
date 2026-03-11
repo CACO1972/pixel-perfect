@@ -62,7 +62,7 @@ const SiteHeader = () => {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-background/95 backdrop-blur-xl border-t border-border/40 py-6 px-6 flex flex-col gap-4">
-          <a href="/evaluacion" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Evaluación</a>
+          <a href="#routes" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Rutas</a>
           <a href="#humana" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">HUMANA.AI</a>
           <a href="#programs" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Nosotros</a>
           <a href="https://wa.me/56974157966" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Contacto</a>
@@ -70,7 +70,6 @@ const SiteHeader = () => {
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             Mi Portal
           </a>
-          <a href="/evaluacion" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase px-6 py-3 bg-accent text-accent-foreground no-underline text-center">Comenzar evaluación →</a>
         </div>
       )}
     </header>
