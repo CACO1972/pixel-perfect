@@ -1,7 +1,7 @@
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { useRef, useEffect, useState } from "react";
 
-const RouteItem = ({ route }: { route: { num: string; title: string; desc: string; back: string } }) => {
+const RouteItem = ({ route }: { route: { num: string; title: string; desc: string; back: string; href: string } }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [flipped, setFlipped] = useState(false);
 
@@ -32,7 +32,7 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
       >
         {/* Front */}
         <a
-          href="#form"
+          href={route.href || "#"}
           className="flex items-center justify-between py-6 md:py-10 no-underline text-foreground relative"
           style={{ backfaceVisibility: "hidden" }}
         >
@@ -49,7 +49,7 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
 
         {/* Back */}
         <a
-          href="#form"
+          href={route.href || "#"}
           className="absolute inset-0 flex items-center justify-between py-6 md:py-10 no-underline bg-accent text-foreground px-4 md:px-8"
           style={{
             backfaceVisibility: "hidden",
@@ -68,10 +68,10 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
 };
 
 const routes = [
-  { num: "01", title: "Soy paciente nuevo", desc: "Evaluación completa con IA. Diagnóstico claro y plan personalizado.", back: "Comienza tu evaluación personalizada" },
-  { num: "02", title: "Mi portal de paciente", desc: "Accede a tu historial, informes y seguimiento de tratamiento.", back: "Ingresa a tu portal con tus datos" },
-  { num: "03", title: "Segunda opinión", desc: "Compara diagnósticos y presupuestos con evidencia científica objetiva.", back: "Sube tu presupuesto y recibe análisis gratuito" },
-  { num: "04", title: "Soy de regiones o internacional", desc: "Pre-evaluación remota completa antes de viajar a Santiago.", back: "Evaluación 100% remota con radiografía digital" },
+  { num: "01", title: "Soy paciente nuevo", desc: "Evaluación completa con IA. Diagnóstico claro y plan personalizado.", back: "Comienza tu evaluación personalizada", href: "/evaluacion" },
+  { num: "02", title: "Mi portal de paciente", desc: "Accede a tu historial, informes y seguimiento de tratamiento.", back: "Ingresa a tu portal con tus datos", href: "/paciente/dashboard" },
+  { num: "03", title: "Segunda opinión", desc: "Compara diagnósticos y presupuestos con evidencia científica objetiva.", back: "Sube tu presupuesto y recibe análisis gratuito", href: "/segunda-opinion" },
+  { num: "04", title: "Soy de regiones o internacional", desc: "Pre-evaluación remota completa antes de viajar a Santiago.", back: "Evaluación 100% remota con radiografía digital", href: "/evaluacion" },
 ];
 
 const RoutesSection = () => {

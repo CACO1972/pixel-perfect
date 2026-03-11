@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import StepAntecedentes from "@/components/wizard/StepAntecedentes";
 import StepMotivo from "@/components/wizard/StepMotivo";
 import StepZona from "@/components/wizard/StepZona";
 import StepSintomas from "@/components/wizard/StepSintomas";
@@ -10,7 +10,16 @@ import StepDatos from "@/components/wizard/StepDatos";
 import StepResumen from "@/components/wizard/StepResumen";
 import type { DentalAnalysis } from "@/lib/api";
 
+export interface AntecedentesData {
+  enfermedades: string[];
+  alergias: string;
+  medicamentos: string;
+  habitos: string[];
+  embarazo: boolean;
+}
+
 export interface WizardData {
+  antecedentes: AntecedentesData;
   motivo: string;
   zona: string;
   sintomas: string[];
@@ -24,6 +33,13 @@ export interface WizardData {
 }
 
 const INITIAL: WizardData = {
+  antecedentes: {
+    enfermedades: [],
+    alergias: "",
+    medicamentos: "",
+    habitos: [],
+    embarazo: false,
+  },
   motivo: "",
   zona: "",
   sintomas: [],
@@ -36,12 +52,11 @@ const INITIAL: WizardData = {
   rut: "",
 };
 
-const STEP_LABELS = ["Motivo", "Zona", "Síntomas", "Foto IA", "Ruta", "Financiamiento", "Tus datos", "Confirmar"];
+const STEP_LABELS = ["Antecedentes", "Motivo", "Zona", "Síntomas", "Foto IA", "Ruta", "Evaluación", "Tus datos", "Confirmar"];
 
 const Evaluacion = () => {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(INITIAL);
-  const navigate = useNavigate();
 
   const update = (partial: Partial<WizardData>) =>
     setData((prev) => ({ ...prev, ...partial }));
@@ -51,14 +66,15 @@ const Evaluacion = () => {
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
   const stepComponents = [
-    <StepMotivo key={0} data={data} update={update} next={next} />,
-    <StepZona key={1} data={data} update={update} next={next} back={back} />,
-    <StepSintomas key={2} data={data} update={update} next={next} back={back} />,
-    <StepFoto key={3} data={data} update={update} next={next} back={back} />,
-    <StepRuta key={4} data={data} update={update} next={next} back={back} />,
-    <StepFinanciamiento key={5} data={data} update={update} next={next} back={back} />,
-    <StepDatos key={6} data={data} update={update} next={next} back={back} />,
-    <StepResumen key={7} data={data} back={back} />,
+    <StepAntecedentes key={0} data={data} update={update} next={next} />,
+    <StepMotivo key={1} data={data} update={update} next={next} />,
+    <StepZona key={2} data={data} update={update} next={next} back={back} />,
+    <StepSintomas key={3} data={data} update={update} next={next} back={back} />,
+    <StepFoto key={4} data={data} update={update} next={next} back={back} />,
+    <StepRuta key={5} data={data} update={update} next={next} back={back} />,
+    <StepFinanciamiento key={6} data={data} update={update} next={next} back={back} />,
+    <StepDatos key={7} data={data} update={update} next={next} back={back} />,
+    <StepResumen key={8} data={data} back={back} />,
   ];
 
   return (
@@ -68,7 +84,7 @@ const Evaluacion = () => {
         <div className="container flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => window.history.back()}
+              onClick={() => step > 0 ? back() : window.history.back()}
               className="group flex items-center justify-center w-8 h-8 border border-border/60 hover:border-accent transition-colors"
               aria-label="Volver"
             >

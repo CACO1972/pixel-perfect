@@ -10,7 +10,7 @@ const QuoteSection = () => {
           "Si entiendes lo que tienes, confías."
         </p>
         <p className="font-mono text-[0.75rem] tracking-[0.2em] uppercase text-mid-gray">
-          Equipo Clínica Miró · 18 años de experiencia · 11.000+ implantes documentados
+          Equipo Clínica Miró · 30+ años de experiencia · 11.000+ implantes documentados
         </p>
       </div>
     </section>
