@@ -38,14 +38,8 @@ const SiteHeader = () => {
           <a href="#programs" className="text-[0.8rem] tracking-[0.12em] uppercase text-muted-foreground no-underline hover:text-foreground transition-colors">
             Nosotros
           </a>
-          <a href="/evaluacion" className="text-[0.8rem] tracking-[0.12em] uppercase text-muted-foreground no-underline hover:text-foreground transition-colors">
+          <a href="https://wa.me/56974157966" target="_blank" rel="noopener noreferrer" className="text-[0.8rem] tracking-[0.12em] uppercase text-muted-foreground no-underline hover:text-foreground transition-colors">
             Contacto
-          </a>
-          <a
-            href="/evaluacion"
-            className="px-5 py-2 bg-accent text-accent-foreground font-display font-bold text-[0.75rem] tracking-[0.08em] uppercase no-underline hover:opacity-90 transition-opacity"
-          >
-            Evaluar →
           </a>
           <a href="/paciente" className="text-[0.8rem] tracking-[0.12em] uppercase text-muted-foreground no-underline hover:text-foreground transition-colors flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -75,9 +69,6 @@ const SiteHeader = () => {
           <a href="/paciente" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             Mi Portal
-          </a>
-          <a href="/evaluacion" onClick={() => setMobileOpen(false)} className="w-full text-center py-3 bg-accent text-accent-foreground font-display font-bold text-[0.85rem] tracking-[0.08em] uppercase no-underline">
-            Evaluar mi caso →
           </a>
         </div>
       )}
