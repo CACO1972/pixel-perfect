@@ -72,8 +72,8 @@ const LoginForm = ({ onSubmit, loading, error }: { onSubmit: (rut: string, phone
               <Input
                 value={rut}
                 onChange={e => setRut(formatRut(e.target.value))}
-                placeholder="12.345.678-9"
-                maxLength={12}
+                placeholder="12345678-9"
+                maxLength={10}
                 style={{ borderRadius: 0 }}
               />
             </div>
