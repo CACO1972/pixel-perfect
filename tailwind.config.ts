@@ -64,6 +64,16 @@ export default {
           DEFAULT: "hsl(var(--navy))",
           light: "hsl(var(--navy-light))",
         },
+        warm: {
+          900: "hsl(var(--warm-900))",
+          800: "hsl(var(--warm-800))",
+          700: "hsl(var(--warm-700))",
+          600: "hsl(var(--warm-600))",
+          500: "hsl(var(--warm-500))",
+          400: "hsl(var(--warm-400))",
+          300: "hsl(var(--warm-300))",
+          200: "hsl(var(--warm-200))",
+        },
         status: {
           success: "hsl(var(--status-success))",
           warning: "hsl(var(--status-warning))",
