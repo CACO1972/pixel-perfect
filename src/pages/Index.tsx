@@ -22,7 +22,6 @@ const Index = () => {
       <QuoteSection />
       <ProgramsSection />
       <MapaConfianzaSection />
-      <CtaSection />
       <SiteFooter />
     </>
   );
