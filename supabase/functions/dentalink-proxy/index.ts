@@ -133,14 +133,14 @@ serve(async (req) => {
 
       case "get_availability": {
         const { profesional_id, fecha_inicio, fecha_fin } = params || {};
-        const url = `${DENTALINK_BASE}/profesionales/${profesional_id}/disponibilidad?fecha_inicio=${fecha_inicio}&fecha_fin=${fecha_fin}`;
+        const url = `${DENTALINK_BASE}/dentistas/${profesional_id}/disponibilidad?fecha_inicio=${fecha_inicio}&fecha_fin=${fecha_fin}`;
         const res = await fetch(url, { headers });
         result = await res.json();
         break;
       }
 
       case "get_professionals": {
-        const res = await fetch(`${DENTALINK_BASE}/profesionales`, { headers });
+        const res = await fetch(`${DENTALINK_BASE}/dentistas`, { headers });
         result = await res.json();
         break;
       }
