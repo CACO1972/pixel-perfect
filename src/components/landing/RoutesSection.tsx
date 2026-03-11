@@ -1,8 +1,10 @@
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
-const RouteItem = ({ route }: { route: { num: string; title: string; desc: string } }) => {
-  const ref = useRef<HTMLAnchorElement>(null);
+const RouteItem = ({ route }: { route: { num: string; title: string; desc: string; back: string } }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [flipped, setFlipped] = useState(false);
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -15,30 +17,61 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
   }, []);
 
   return (
-    <a
+    <div
       ref={ref}
-      href="#form"
-      className="reveal group flex items-center justify-between py-6 md:py-10 border-b border-border no-underline text-foreground hover:pl-4 transition-all relative"
+      className="reveal border-b border-border perspective-[1000px]"
+      onMouseEnter={() => setFlipped(true)}
+      onMouseLeave={() => setFlipped(false)}
     >
-      <div className="absolute left-0 top-0 bottom-0 w-0 bg-accent group-hover:w-[3px] transition-all duration-500" />
-      <div className="flex items-baseline gap-4 md:gap-10">
-        <span className="font-mono text-[0.7rem] tracking-[0.2em] text-accent font-semibold min-w-[2rem]">{route.num}</span>
-        <span className="font-bold text-[clamp(1.2rem,2.5vw,2rem)] tracking-[-0.01em] group-hover:text-accent transition-colors">{route.title}</span>
+      <div
+        className="relative transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)]"
+        style={{
+          transformStyle: "preserve-3d",
+          transform: flipped ? "rotateX(-180deg)" : "rotateX(0deg)",
+        }}
+      >
+        {/* Front */}
+        <a
+          href="#form"
+          className="flex items-center justify-between py-6 md:py-10 no-underline text-foreground relative"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <div className="flex items-baseline gap-4 md:gap-10">
+            <span className="font-mono text-[0.7rem] tracking-[0.2em] text-accent font-semibold min-w-[2rem]">{route.num}</span>
+            <span className="font-bold text-[clamp(1.2rem,2.5vw,2rem)] tracking-[-0.01em]">{route.title}</span>
+          </div>
+          <span className="hidden md:block text-[0.85rem] text-muted-foreground max-w-[300px] text-right leading-relaxed">{route.desc}</span>
+          <svg className="w-5 h-5 text-muted-foreground ml-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+
+        {/* Back */}
+        <a
+          href="#form"
+          className="absolute inset-0 flex items-center justify-between py-6 md:py-10 no-underline bg-accent text-foreground px-4 md:px-8"
+          style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateX(180deg)",
+          }}
+        >
+          <div className="flex items-baseline gap-4 md:gap-10">
+            <span className="font-mono text-[0.7rem] tracking-[0.2em] font-semibold min-w-[2rem]">{route.num}</span>
+            <span className="font-bold text-[clamp(1rem,2vw,1.5rem)] tracking-[-0.01em]">{route.back}</span>
+          </div>
+          <span className="text-[0.85rem] font-semibold tracking-[0.12em] uppercase">Ir →</span>
+        </a>
       </div>
-      <span className="hidden md:block text-[0.85rem] text-mid-gray max-w-[300px] text-right leading-relaxed">{route.desc}</span>
-      <svg className="w-5 h-5 text-mid-gray group-hover:text-accent group-hover:translate-x-1 transition-all ml-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <line x1="5" y1="12" x2="19" y2="12" />
-        <polyline points="12 5 19 12 12 19" />
-      </svg>
-    </a>
+    </div>
   );
 };
 
 const routes = [
-  { num: "01", title: "Reservar mi evaluación", desc: "Evaluación completa con IA. Diagnóstico claro y plan de tratamiento personalizado." },
-  { num: "02", title: "Explorar HUMANA.AI", desc: "Tour interactivo por nuestro ecosistema de inteligencia artificial dental." },
-  { num: "03", title: "Segunda opinión", desc: "Compara diagnósticos y presupuestos con evidencia científica objetiva." },
-  { num: "04", title: "Soy de regiones o internacional", desc: "Pre-evaluación remota completa antes de viajar a Santiago." },
+  { num: "01", title: "Reservar mi evaluación", desc: "Evaluación completa con IA. Diagnóstico claro y plan personalizado.", back: "Agenda tu hora ahora — 30 min, sin compromiso" },
+  { num: "02", title: "Explorar HUMANA.AI", desc: "Tour interactivo por nuestro ecosistema de inteligencia artificial dental.", back: "Descubre cómo la IA predice tu tratamiento" },
+  { num: "03", title: "Segunda opinión", desc: "Compara diagnósticos y presupuestos con evidencia científica objetiva.", back: "Sube tu presupuesto y recibe análisis gratuito" },
+  { num: "04", title: "Soy de regiones o internacional", desc: "Pre-evaluación remota completa antes de viajar a Santiago.", back: "Evaluación 100% remota con radiografía digital" },
 ];
 
 const RoutesSection = () => {
@@ -56,7 +89,7 @@ const RoutesSection = () => {
 
         <div className="border-t border-border">
           {routes.map((route) => (
-              <RouteItem key={route.num} route={route} />
+            <RouteItem key={route.num} route={route} />
           ))}
         </div>
       </div>
