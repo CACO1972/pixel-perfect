@@ -1,12 +1,12 @@
 import type { WizardData } from "@/pages/Evaluacion";
 
 const MOTIVOS = [
-  { id: "faltan_dientes", icon: "🦷", label: "Me faltan dientes" },
-  { id: "mejorar_sonrisa", icon: "✨", label: "Quiero mejorar mi sonrisa" },
-  { id: "dolor", icon: "⚡", label: "Tengo dolor o molestia" },
-  { id: "ortodoncia", icon: "🔧", label: "Ortodoncia / alinear dientes" },
-  { id: "segunda_opinion", icon: "🔍", label: "Segunda opinión" },
-  { id: "preventivo", icon: "🛡️", label: "Chequeo preventivo" },
+  { id: "faltan_dientes", label: "Me faltan dientes" },
+  { id: "mejorar_sonrisa", label: "Quiero mejorar mi sonrisa" },
+  { id: "dolor", label: "Tengo dolor o molestia" },
+  { id: "ortodoncia", label: "Ortodoncia / alinear dientes" },
+  { id: "segunda_opinion", label: "Segunda opinión" },
+  { id: "preventivo", label: "Chequeo preventivo" },
 ];
 
 interface Props {
@@ -31,7 +31,6 @@ const StepMotivo = ({ data, update, next }: Props) => (
             data.motivo === m.id ? "border-accent bg-accent/5" : "border-border"
           }`}
         >
-          <span className="text-2xl">{m.icon}</span>
           <span className="font-display font-semibold text-[0.95rem]">{m.label}</span>
         </button>
       ))}
