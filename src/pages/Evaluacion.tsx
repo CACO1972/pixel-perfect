@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import StepAntecedentes from "@/components/wizard/StepAntecedentes";
 import StepMotivo from "@/components/wizard/StepMotivo";
 import StepZona from "@/components/wizard/StepZona";
