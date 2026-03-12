@@ -81,7 +81,7 @@ const RoutesSection = () => {
         <div ref={headerRef} className="reveal mb-12 md:mb-20">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-accent mb-3">Tu camino</p>
           <h2 className="font-display font-[900] text-[clamp(2rem,5vw,4rem)] uppercase tracking-[-0.02em] leading-[0.95]">
-            Elige tu<br />ruta.
+            Comienza<br />aquí.
           </h2>
         </div>
 

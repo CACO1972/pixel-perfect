@@ -84,6 +84,7 @@ const SiteHeader = () => {
           <a href="#humana" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">HUMANA.AI</a>
           <a href="#programs" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Nosotros</a>
           <a href="https://wa.me/56974157966" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Contacto</a>
+          <a href="/evaluacion?origen=regiones" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline">Regiones</a>
           <a href="/paciente" onClick={() => setMobileOpen(false)} className="text-[0.85rem] tracking-[0.1em] uppercase text-muted-foreground no-underline flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             Mi Portal
