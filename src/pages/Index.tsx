@@ -5,6 +5,7 @@ import ExplainerSection from "@/components/landing/ExplainerSection";
 import RoutesSection from "@/components/landing/RoutesSection";
 import HumanaSection from "@/components/landing/HumanaSection";
 import QuoteSection from "@/components/landing/QuoteSection";
+import EquipoSection from "@/components/landing/EquipoSection";
 import ProgramsSection from "@/components/landing/ProgramsSection";
 import MapaConfianzaSection from "@/components/landing/MapaConfianzaSection";
 import CtaSection from "@/components/landing/CtaSection";
@@ -21,6 +22,7 @@ const Index = () => {
       <RoutesSection />
       <HumanaSection />
       <QuoteSection />
+      <EquipoSection />
       <ProgramsSection />
       <MapaConfianzaSection />
       <CtaSection />
