@@ -95,7 +95,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        url: `${FLOW_API_URL}/payment/pay`,
+        url: flowData.url,
         token: flowData.token,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
