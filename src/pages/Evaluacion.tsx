@@ -60,7 +60,6 @@ const Evaluacion = () => {
   const [data, setData] = useState<WizardData>(INITIAL);
   const { theme, setTheme } = useTheme();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-  const [data, setData] = useState<WizardData>(INITIAL);
 
   const update = (partial: Partial<WizardData>) =>
     setData((prev) => ({ ...prev, ...partial }));
