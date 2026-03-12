@@ -1546,6 +1546,45 @@ export type Database = {
           },
         ]
       }
+      funnel_events: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          event: string
+          id: number
+          metadata: Json | null
+          motivo: string | null
+          nombre: string | null
+          order_id: string | null
+          session_id: string | null
+          zona: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          event: string
+          id?: number
+          metadata?: Json | null
+          motivo?: string | null
+          nombre?: string | null
+          order_id?: string | null
+          session_id?: string | null
+          zona?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          event?: string
+          id?: number
+          metadata?: Json | null
+          motivo?: string | null
+          nombre?: string | null
+          order_id?: string | null
+          session_id?: string | null
+          zona?: string | null
+        }
+        Relationships: []
+      }
       funnel_history: {
         Row: {
           created_at: string
@@ -3268,6 +3307,66 @@ export type Database = {
         }
         Relationships: []
       }
+      social_leads: {
+        Row: {
+          actualizado_en: string | null
+          atendido_por: string | null
+          canal_origen: string | null
+          creado_en: string | null
+          derivar_whatsapp: boolean | null
+          especialidad: string | null
+          estado: string | null
+          id: string
+          mensaje_enviado: string | null
+          mensaje_original: string | null
+          nombre: string | null
+          notas_recepcion: string | null
+          sender_ig_id: string | null
+          sintoma: string | null
+          tag_manychat: string | null
+          urgencia: string | null
+          url_evaluacion: string | null
+        }
+        Insert: {
+          actualizado_en?: string | null
+          atendido_por?: string | null
+          canal_origen?: string | null
+          creado_en?: string | null
+          derivar_whatsapp?: boolean | null
+          especialidad?: string | null
+          estado?: string | null
+          id?: string
+          mensaje_enviado?: string | null
+          mensaje_original?: string | null
+          nombre?: string | null
+          notas_recepcion?: string | null
+          sender_ig_id?: string | null
+          sintoma?: string | null
+          tag_manychat?: string | null
+          urgencia?: string | null
+          url_evaluacion?: string | null
+        }
+        Update: {
+          actualizado_en?: string | null
+          atendido_por?: string | null
+          canal_origen?: string | null
+          creado_en?: string | null
+          derivar_whatsapp?: boolean | null
+          especialidad?: string | null
+          estado?: string | null
+          id?: string
+          mensaje_enviado?: string | null
+          mensaje_original?: string | null
+          nombre?: string | null
+          notas_recepcion?: string | null
+          sender_ig_id?: string | null
+          sintoma?: string | null
+          tag_manychat?: string | null
+          urgencia?: string | null
+          url_evaluacion?: string | null
+        }
+        Relationships: []
+      }
       treatment_plans: {
         Row: {
           approved_at: string | null
@@ -3554,6 +3653,51 @@ export type Database = {
           count: number | null
           percentage: number | null
           risk_level: string | null
+        }
+        Relationships: []
+      }
+      social_leads_dashboard: {
+        Row: {
+          canal_origen: string | null
+          creado_en: string | null
+          derivar_whatsapp: boolean | null
+          especialidad: string | null
+          estado: string | null
+          id: string | null
+          mensaje_enviado: string | null
+          mensaje_resumen: string | null
+          nombre: string | null
+          notas_recepcion: string | null
+          sintoma: string | null
+          urgencia: string | null
+        }
+        Insert: {
+          canal_origen?: string | null
+          creado_en?: string | null
+          derivar_whatsapp?: boolean | null
+          especialidad?: string | null
+          estado?: string | null
+          id?: string | null
+          mensaje_enviado?: string | null
+          mensaje_resumen?: never
+          nombre?: string | null
+          notas_recepcion?: string | null
+          sintoma?: string | null
+          urgencia?: string | null
+        }
+        Update: {
+          canal_origen?: string | null
+          creado_en?: string | null
+          derivar_whatsapp?: boolean | null
+          especialidad?: string | null
+          estado?: string | null
+          id?: string | null
+          mensaje_enviado?: string | null
+          mensaje_resumen?: never
+          nombre?: string | null
+          notas_recepcion?: string | null
+          sintoma?: string | null
+          urgencia?: string | null
         }
         Relationships: []
       }
