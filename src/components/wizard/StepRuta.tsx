@@ -1,5 +1,6 @@
 import type { WizardData } from "@/pages/Evaluacion";
 import type { DentalHallazgo } from "@/lib/api";
+import { trackFunnel } from "@/lib/funnel";
 
 const PROGRAMAS = [
   {
@@ -100,6 +101,19 @@ interface Props {
 }
 
 const StepRuta = ({ data, update, next, back }: Props) => {
+  // Track: ai_result — usuario llegó a ver el resultado del análisis IA
+  useEffect(() => {
+    trackFunnel("ai_result", {
+      motivo: data.motivo,
+      zona:   data.zona,
+      metadata: {
+        analisisValido: data.analisis?.analisisValido ?? false,
+        estadoGeneral:  data.analisis?.estadoGeneral ?? "desconocido",
+        programaRecomendado: data.programaRecomendado,
+      },
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fire once on mount
   const recomendado = getRecommendedProgram(data);
   const otros = PROGRAMAS.filter((p) => p !== recomendado);
 
