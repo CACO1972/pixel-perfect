@@ -20,6 +20,7 @@ const PacienteDashboard  = lazy(() => import("./pages/paciente/Dashboard"));
 const PacienteMisCitas   = lazy(() => import("./pages/paciente/MisCitas"));
 const PacienteAsesor     = lazy(() => import("./pages/paciente/AsesorVirtual"));
 const PacientePerfil     = lazy(() => import("./pages/paciente/MiPerfil"));
+const FunnelDashboard    = lazy(() => import("./pages/admin/FunnelDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/paciente/asesor"   element={<PacienteAsesor />} />
             <Route path="/paciente/perfil"   element={<PacientePerfil />} />
 
+            <Route path="/admin/funnel"   element={<FunnelDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </Suspense>
