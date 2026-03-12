@@ -58,6 +58,9 @@ const STEP_LABELS = ["Antecedentes", "Motivo", "Zona", "Síntomas", "Foto IA", "
 const Evaluacion = () => {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(INITIAL);
+  const { theme, setTheme } = useTheme();
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+  const [data, setData] = useState<WizardData>(INITIAL);
 
   const update = (partial: Partial<WizardData>) =>
     setData((prev) => ({ ...prev, ...partial }));
