@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#f5f2ed"/>
+  <rect x="0" y="700" width="800" height="300" fill="#e8e0d4"/>
+  <!-- Silhouette -->
+  <ellipse cx="400" cy="280" rx="140" ry="160" fill="#c9a87c" opacity="0.3"/>
+  <rect x="260" y="420" width="280" height="400" rx="20" fill="#c9a87c" opacity="0.2"/>
+  <!-- Doctor coat hint -->
+  <rect x="230" y="430" width="340" height="380" rx="15" fill="white" opacity="0.6"/>
+  <!-- Text -->
+  <text x="400" y="870" text-anchor="middle" font-family="Cormorant Garamond, serif" font-size="28" fill="#8a7a6a" letter-spacing="2">Dr. Carlos Montoya</text>
+  <text x="400" y="910" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="16" fill="#a89880" letter-spacing="3">IMPLANTOLOGÍA ORAL</text>
+</svg>
