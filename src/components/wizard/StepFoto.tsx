@@ -284,6 +284,10 @@ const StepFoto = ({ data, update, next, back }: Props) => {
           {/* Photo with focused marker system */}
           {data.fotoBase64 && (
             <div className="relative w-full aspect-square overflow-hidden border border-border">
+              <div
+                className="w-full h-full transition-transform duration-500 ease-out"
+                style={zoomStyle}
+              >
               <img src={data.fotoBase64} alt="Tu foto" className="w-full h-full object-cover" />
 
               {/* SVG overlay for markers + connector lines */}
