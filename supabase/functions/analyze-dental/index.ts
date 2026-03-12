@@ -113,7 +113,117 @@ RULES:
 - Include visible restorations, stains, alignment issues — anything clinically observable
 - Always respond in Spanish for the patient-facing text
 - Output ONLY the raw JSON object. No markdown fences, no extra text, no disclaimers outside the JSON`;
+type WizardDataPayload = {
+  motivo?: string;
+  sintomas?: string[];
+  zona?: string;
+  edad?: number | string;
+  fumador?: boolean;
+  diabetico?: boolean;
+  higiene_oral?: "buena" | "regular" | "mala";
+};
 
+type VisionProvider = {
+  provider: string;
+  apiUrl: string;
+  apiKey: string;
+  model: string;
+};
+
+function buildUserContextText(wizardData?: WizardDataPayload): string {
+  if (!wizardData) return "Analiza esta imagen dental:";
+
+  const sintomas = Array.isArray(wizardData.sintomas) ? wizardData.sintomas.join(",") : "";
+  return `Analiza esta imagen dental. Contexto del paciente: motivo=${wizardData.motivo || "no informado"}, síntomas=${sintomas || "no informados"}, zona=${wizardData.zona || "no informada"}`;
+}
+
+function extractJsonCandidate(content: string): string | null {
+  const trimmed = content.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    return trimmed;
+  }
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fenced?.[1]) {
+    return fenced[1].trim();
+  }
+
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+  if (start >= 0 && end > start) {
+    return trimmed.slice(start, end + 1).trim();
+  }
+
+  return null;
+}
+
+function parseJsonPayload(content: string): Record<string, unknown> | null {
+  const candidate = extractJsonCandidate(content);
+  if (!candidate) return null;
+
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    return null;
+  }
+}
+
+function isRefusalText(content: string): boolean {
+  const text = content.toLowerCase();
+  return (
+    text.includes("no puedo ayudar") ||
+    text.includes("no puedo ayudarte") ||
+    text.includes("cannot help") ||
+    text.includes("can't help") ||
+    text.includes("i can't assist")
+  );
+}
+
+function isRejectedPayload(payload: Record<string, unknown>): boolean {
+  const msg = String(payload.mensajeGeneral || "").toLowerCase();
+  const invalid = payload.analisisValido === false;
+  return invalid && isRefusalText(msg);
+}
+
+async function runVisionAnalysis(
+  vision: VisionProvider,
+  base64Data: string,
+  wizardData?: WizardDataPayload,
+): Promise<string> {
+  const res = await fetch(vision.apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${vision.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: vision.model,
+      temperature: 0.2,
+      max_tokens: 2000,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: buildUserContextText(wizardData) },
+            { type: "image_url", image_url: { url: base64Data, detail: "high" } },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`${vision.provider} API error ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "";
+}
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 serve(async (req) => {
@@ -122,7 +232,7 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
+    const body = await req.json() as { imageBase64?: string; wizardData?: WizardDataPayload };
     const { imageBase64, wizardData } = body;
 
     if (!imageBase64) {
@@ -132,60 +242,66 @@ serve(async (req) => {
       });
     }
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
-    const MODEL = Deno.env.get("OPENAI_MODEL_VISION") || "gpt-4o";
-    const base64Data = imageBase64.includes(",") ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
-
-    // ── 1. GPT-4o vision analysis ──
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 2000,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: wizardData
-                  ? `Analiza esta imagen dental. Contexto del paciente: motivo=${wizardData.motivo}, síntomas=${(wizardData.sintomas || []).join(",")}, zona=${wizardData.zona}`
-                  : "Analiza esta imagen dental:",
-              },
-              { type: "image_url", image_url: { url: base64Data, detail: "high" } },
-            ],
-          },
-        ],
-      }),
-    });
-
-    if (!openaiRes.ok) {
-      const errText = await openaiRes.text();
-      console.error("OpenAI error:", errText);
-      throw new Error(`OpenAI API error: ${openaiRes.status}`);
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    const openaiData = await openaiRes.json();
-    const content = openaiData.choices?.[0]?.message?.content || "";
+    const OPENAI_API_URL = Deno.env.get("OPENAI_API_URL") || "https://api.openai.com/v1/chat/completions";
+    const PRIMARY_MODEL = Deno.env.get("OPENAI_MODEL_VISION") || "gpt-4o";
 
-    let parsed: Record<string, unknown>;
-    try {
-      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      parsed = JSON.parse(jsonStr);
-    } catch {
-      console.error("Failed to parse AI response:", content);
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const FALLBACK_MODEL = Deno.env.get("OPENAI_MODEL_VISION_FALLBACK") || "google/gemini-3-flash-preview";
+
+    const providers: VisionProvider[] = [
+      { provider: "openai", apiUrl: OPENAI_API_URL, apiKey: OPENAI_API_KEY, model: PRIMARY_MODEL },
+      ...(LOVABLE_API_KEY
+        ? [{ provider: "lovable-gateway", apiUrl: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: LOVABLE_API_KEY, model: FALLBACK_MODEL }]
+        : []),
+    ];
+
+    const base64Data = imageBase64.includes(",") ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
+
+    let parsed: Record<string, unknown> | null = null;
+    let lastContent = "";
+
+    for (const provider of providers) {
+      try {
+        const content = await runVisionAnalysis(provider, base64Data, wizardData);
+        lastContent = content;
+
+        if (isRefusalText(content)) {
+          console.warn(`[analyze-dental] ${provider.provider} returned refusal text.`);
+          continue;
+        }
+
+        const parsedCandidate = parseJsonPayload(content);
+        if (!parsedCandidate) {
+          console.warn(`[analyze-dental] ${provider.provider} returned non-JSON content.`);
+          continue;
+        }
+
+        if (isRejectedPayload(parsedCandidate)) {
+          console.warn(`[analyze-dental] ${provider.provider} returned refusal payload.`);
+          continue;
+        }
+
+        parsed = parsedCandidate;
+        break;
+      } catch (err) {
+        console.error(`[analyze-dental] ${provider.provider} failed:`, err);
+      }
+    }
+
+    if (!parsed) {
+      console.error("Failed to parse AI response from all providers. Last response:", lastContent);
       parsed = {
         analisisValido: false,
-        mensajeGeneral: "No pudimos analizar la imagen. Intenta con otra foto.",
+        mensajeGeneral: "No pudimos analizar la imagen. Intenta con otra foto más iluminada y enfocada en los dientes.",
         hallazgos: [],
         estadoGeneral: "requiere_atencion",
         recomendacion: "Te recomendamos una evaluación presencial.",
-        proximosPasos: ["Agendar evaluación presencial"],
+        proximosPasos: ["Tomar una nueva foto frontal de la sonrisa", "Agendar evaluación presencial"],
         calidadImagen: "deficiente",
         ausenciaDental: false,
         riesgoImplante: { detectado: false, notas: "" },
