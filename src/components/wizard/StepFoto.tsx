@@ -411,6 +411,7 @@ const StepFoto = ({ data, update, next, back }: Props) => {
                   SCANDENT · {analisis.hallazgos.length} HALLAZGO{analisis.hallazgos.length !== 1 ? "S" : ""}
                 </span>
               </div>
+              </div>
             </div>
           )}
 
