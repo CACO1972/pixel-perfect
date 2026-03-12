@@ -71,7 +71,7 @@ export default function FunnelDashboard() {
     const results: FunnelCount[] = [];
 
     for (const ev of events) {
-      let q = supabase.from("funnel_events").select("id", { count: "exact", head: true }).eq("event", ev);
+      let q = (supabase.from("funnel_events") as any).select("id", { count: "exact", head: true }).eq("event", ev);
       if (since) q = q.gte("created_at", since);
       const { count } = await q;
       results.push({ event: ev, count: count ?? 0 });
