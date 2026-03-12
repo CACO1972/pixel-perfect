@@ -49,7 +49,7 @@ export function trackFunnel(event: FunnelEvent, opts: TrackOptions = {}): void {
   // Async fire-and-forget — no await, no throw
   supabase
     .from("funnel_events")
-    .insert([row])
+    .insert([row] as any)
     .then(({ error }) => {
       if (error) console.warn("[funnel] track error:", error.message);
     });
