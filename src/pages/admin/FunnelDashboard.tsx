@@ -71,7 +71,7 @@ export default function FunnelDashboard() {
     const results: FunnelCount[] = [];
 
     for (const ev of events) {
-      let q = supabase.from("funnel_events").select("id", { count: "exact", head: true }).eq("event", ev);
+      let q = (supabase.from("funnel_events") as any).select("id", { count: "exact", head: true }).eq("event", ev);
       if (since) q = q.gte("created_at", since);
       const { count } = await q;
       results.push({ event: ev, count: count ?? 0 });
@@ -79,8 +79,7 @@ export default function FunnelDashboard() {
     setCounts(results);
 
     // Recent payment events
-    let q2 = supabase
-      .from("funnel_events")
+    let q2 = (supabase.from("funnel_events") as any)
       .select("id, event, nombre, email, motivo, zona, created_at")
       .order("created_at", { ascending: false })
       .limit(20);

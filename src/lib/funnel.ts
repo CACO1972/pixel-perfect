@@ -35,7 +35,7 @@ interface TrackOptions {
  * Fire-and-forget: nunca bloquea el flujo del usuario.
  */
 export function trackFunnel(event: FunnelEvent, opts: TrackOptions = {}): void {
-  const row = {
+  const row: Record<string, unknown> = {
     event,
     session_id: getSessionId(),
     order_id:   opts.orderId  ?? null,
@@ -43,13 +43,13 @@ export function trackFunnel(event: FunnelEvent, opts: TrackOptions = {}): void {
     email:      opts.email    ?? null,
     motivo:     opts.motivo   ?? null,
     zona:       opts.zona     ?? null,
-    metadata:   opts.metadata ?? {},
+    metadata:   (opts.metadata ?? {}) as Record<string, unknown>,
   };
 
   // Async fire-and-forget — no await, no throw
   supabase
     .from("funnel_events")
-    .insert(row)
+    .insert([row] as any)
     .then(({ error }) => {
       if (error) console.warn("[funnel] track error:", error.message);
     });
