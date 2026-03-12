@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.dentalink-proxy]
 verify_jwt = false
+
+[functions.compare-presupuesto]
+verify_jwt = false
