@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import StepAntecedentes from "@/components/wizard/StepAntecedentes";
 import StepMotivo from "@/components/wizard/StepMotivo";
@@ -10,6 +10,7 @@ import StepFinanciamiento from "@/components/wizard/StepFinanciamiento";
 import StepDatos from "@/components/wizard/StepDatos";
 import StepResumen from "@/components/wizard/StepResumen";
 import type { DentalAnalysis } from "@/lib/api";
+import { trackFunnel } from "@/lib/funnel";
 
 export interface AntecedentesData {
   enfermedades: string[];
@@ -58,6 +59,11 @@ const STEP_LABELS = ["Antecedentes", "Motivo", "Zona", "Síntomas", "Foto IA", "
 const Evaluacion = () => {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<WizardData>(INITIAL);
+
+  // Track: wizard_start — se dispara una sola vez al montar /evaluacion
+  useEffect(() => {
+    trackFunnel("wizard_start");
+  }, []);
   const { theme, setTheme } = useTheme();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
