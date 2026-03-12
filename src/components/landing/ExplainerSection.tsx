@@ -95,7 +95,7 @@ const ExplainerSection = () => {
 
         {/* Video */}
         <div className="mt-16 md:mt-24">
-          <div className="aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+          <div className="aspect-[9/16] md:aspect-video max-w-md md:max-w-none mx-auto rounded-lg overflow-hidden border border-border bg-muted">
             <video
               autoPlay
               muted
