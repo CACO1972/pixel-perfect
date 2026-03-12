@@ -69,9 +69,7 @@ const RouteItem = ({ route }: { route: { num: string; title: string; desc: strin
 
 const routes = [
   { num: "01", title: "Soy paciente nuevo", desc: "Evaluación completa con IA. Diagnóstico claro y plan personalizado.", back: "Comienza tu evaluación personalizada", href: "/evaluacion" },
-  { num: "02", title: "Mi portal de paciente", desc: "Accede a tu historial, informes y seguimiento de tratamiento.", back: "Ingresa a tu portal con tus datos", href: "/paciente" },
-  { num: "03", title: "Segunda opinión", desc: "Compara diagnósticos y presupuestos con evidencia científica objetiva.", back: "Sube tu presupuesto y recibe análisis gratuito", href: "/segunda-opinion" },
-  { num: "04", title: "Soy de regiones o internacional", desc: "Pre-evaluación remota completa antes de viajar a Santiago.", back: "Evaluación 100% remota con radiografía digital", href: "/evaluacion" },
+  { num: "02", title: "Quiero una segunda opinión", desc: "Ya tienes un presupuesto o diagnóstico. Compáralo con evidencia objetiva.", back: "Sube tu presupuesto y recibe análisis", href: "/segunda-opinion" },
 ];
 
 const RoutesSection = () => {
@@ -83,7 +81,7 @@ const RoutesSection = () => {
         <div ref={headerRef} className="reveal mb-12 md:mb-20">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-accent mb-3">Tu camino</p>
           <h2 className="font-display font-[900] text-[clamp(2rem,5vw,4rem)] uppercase tracking-[-0.02em] leading-[0.95]">
-            Elige tu<br />ruta.
+            Comienza<br />aquí.
           </h2>
         </div>
 

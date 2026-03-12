@@ -92,6 +92,21 @@ const ExplainerSection = () => {
             </div>
           ))}
         </div>
+
+        {/* Video */}
+        <div className="mt-16 md:mt-24">
+          <div className="aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            >
+              <source src="/videos/teaser.mp4" type="video/mp4" />
+            </video>
+          </div>
+        </div>
       </div>
     </section>
   );
