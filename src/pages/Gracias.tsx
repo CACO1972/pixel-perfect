@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { sendWhatsApp, notifyStaff, dentalinkProxy } from "@/lib/api";
+import { trackFunnel } from "@/lib/funnel";
 
 const PAYMENT_STORAGE_KEY = "miro_payment_pending";
 
@@ -76,6 +77,18 @@ const Gracias = () => {
       setPatientName(patient.nombre);
       setCodigoUnico(generateCode(patient.orderId));
       whatsappSent.current = true;
+
+      // Track: payment_success — pago confirmado por Flow.cl
+      trackFunnel("payment_success", {
+        orderId: patient.orderId,
+        nombre:  patient.nombre,
+        email:   patient.email,
+        motivo:  patient.motivo,
+        zona:    patient.zona,
+        metadata: {
+          analisisEstado: patient.analisisEstado,
+        },
+      });
 
       const [nombre, ...apellidoParts] = patient.nombre.trim().split(" ");
       const apellido = apellidoParts.join(" ") || nombre;
