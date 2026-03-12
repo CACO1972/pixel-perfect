@@ -16,6 +16,12 @@ const SEVERITY_STYLES: Record<string, string> = {
   severo: "text-status-urgent bg-status-urgent/10 border-status-urgent/30",
 };
 
+const SEVERITY_DOT: Record<string, string> = {
+  leve: "#22c55e",
+  moderado: "#eab308",
+  severo: "#ef4444",
+};
+
 const SEVERITY_MARKER_COLORS: Record<string, string> = {
   leve: "bg-status-success border-status-success",
   moderado: "bg-status-warning border-status-warning",
@@ -29,31 +35,27 @@ const STATE_ICON: Record<string, string> = {
 };
 
 // Map dental location keywords to approximate % coordinates on a frontal smile photo
-// The photo is a square selfie centered on the face/smile
 const LOCATION_MAP: { keywords: string[]; x: number; y: number }[] = [
-  // Upper teeth
-  { keywords: ["incisivo superior", "incisivos superiores", "dientes superiores", "superiores anteriores", "centrales superiores"], x: 50, y: 52 },
-  { keywords: ["lateral superior derecho", "superior derecho"], x: 40, y: 52 },
-  { keywords: ["lateral superior izquierdo", "superior izquierdo"], x: 60, y: 52 },
-  { keywords: ["canino superior derecho"], x: 35, y: 54 },
-  { keywords: ["canino superior izquierdo"], x: 65, y: 54 },
-  { keywords: ["premolar superior", "premolares superiores"], x: 30, y: 55 },
-  { keywords: ["molar superior", "molares superiores"], x: 25, y: 57 },
-  // Lower teeth
-  { keywords: ["incisivo inferior", "incisivos inferiores", "dientes inferiores", "inferiores anteriores", "centrales inferiores", "anteroinferiores", "anteroinferior"], x: 50, y: 62 },
-  { keywords: ["lateral inferior derecho", "inferior derecho"], x: 43, y: 62 },
-  { keywords: ["lateral inferior izquierdo", "inferior izquierdo"], x: 57, y: 62 },
-  { keywords: ["canino inferior derecho"], x: 37, y: 63 },
-  { keywords: ["canino inferior izquierdo"], x: 63, y: 63 },
-  { keywords: ["premolar inferior", "premolares inferiores"], x: 32, y: 64 },
-  { keywords: ["molar inferior", "molares inferiores"], x: 27, y: 65 },
-  // General zones
-  { keywords: ["encía", "encias", "gingival", "encías"], x: 50, y: 48 },
+  { keywords: ["incisivo superior", "incisivos superiores", "dientes superiores", "superiores anteriores", "centrales superiores"], x: 50, y: 48 },
+  { keywords: ["lateral superior derecho", "superior derecho"], x: 38, y: 48 },
+  { keywords: ["lateral superior izquierdo", "superior izquierdo"], x: 62, y: 48 },
+  { keywords: ["canino superior derecho"], x: 32, y: 50 },
+  { keywords: ["canino superior izquierdo"], x: 68, y: 50 },
+  { keywords: ["premolar superior", "premolares superiores"], x: 26, y: 52 },
+  { keywords: ["molar superior", "molares superiores"], x: 20, y: 54 },
+  { keywords: ["incisivo inferior", "incisivos inferiores", "dientes inferiores", "inferiores anteriores", "centrales inferiores", "anteroinferiores", "anteroinferior"], x: 50, y: 60 },
+  { keywords: ["lateral inferior derecho", "inferior derecho"], x: 40, y: 61 },
+  { keywords: ["lateral inferior izquierdo", "inferior izquierdo"], x: 60, y: 61 },
+  { keywords: ["canino inferior derecho"], x: 34, y: 62 },
+  { keywords: ["canino inferior izquierdo"], x: 66, y: 62 },
+  { keywords: ["premolar inferior", "premolares inferiores"], x: 28, y: 63 },
+  { keywords: ["molar inferior", "molares inferiores"], x: 22, y: 65 },
+  { keywords: ["encía", "encias", "gingival", "encías"], x: 50, y: 44 },
   { keywords: ["diastema", "espaciamiento", "espacio"], x: 50, y: 53 },
-  { keywords: ["zona anterior", "anteriores"], x: 50, y: 57 },
-  { keywords: ["zona posterior", "posteriores"], x: 28, y: 60 },
-  { keywords: ["arcada superior", "maxilar"], x: 50, y: 50 },
-  { keywords: ["arcada inferior", "mandibular", "mandíbula"], x: 50, y: 65 },
+  { keywords: ["zona anterior", "anteriores"], x: 50, y: 55 },
+  { keywords: ["zona posterior", "posteriores"], x: 24, y: 58 },
+  { keywords: ["arcada superior", "maxilar"], x: 50, y: 46 },
+  { keywords: ["arcada inferior", "mandibular", "mandíbula"], x: 50, y: 64 },
 ];
 
 function getMarkerPosition(ubicacion: string): { x: number; y: number } {
@@ -63,8 +65,37 @@ function getMarkerPosition(ubicacion: string): { x: number; y: number } {
       return { x: loc.x, y: loc.y };
     }
   }
-  // Default: center of mouth area
-  return { x: 50, y: 58 };
+  return { x: 50, y: 55 };
+}
+
+// Spread markers that are too close together
+function spreadMarkers(hallazgos: DentalHallazgo[]): { x: number; y: number }[] {
+  const positions = hallazgos.map((h) => ({ ...getMarkerPosition(h.ubicacion) }));
+  const MIN_DIST = 8; // minimum % distance
+
+  for (let iter = 0; iter < 5; iter++) {
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const dx = positions[j].x - positions[i].x;
+        const dy = positions[j].y - positions[i].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < MIN_DIST && dist > 0) {
+          const push = (MIN_DIST - dist) / 2;
+          const angle = Math.atan2(dy, dx);
+          positions[j].x += Math.cos(angle) * push;
+          positions[j].y += Math.sin(angle) * push;
+          positions[i].x -= Math.cos(angle) * push;
+          positions[i].y -= Math.sin(angle) * push;
+        }
+      }
+    }
+  }
+
+  // Clamp to 8-92%
+  return positions.map((p) => ({
+    x: Math.max(8, Math.min(92, p.x)),
+    y: Math.max(8, Math.min(92, p.y)),
+  }));
 }
 
 const StepFoto = ({ data, update, next, back }: Props) => {
@@ -75,7 +106,6 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   const [activeMarker, setActiveMarker] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Elapsed seconds timer during analysis
   useEffect(() => {
     if (!loading) {
       setElapsedSeconds(0);
@@ -124,6 +154,7 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   };
 
   const analisis = data.analisis;
+  const markerPositions = analisis ? spreadMarkers(analisis.hallazgos) : [];
 
   return (
     <div>
@@ -174,17 +205,13 @@ const StepFoto = ({ data, update, next, back }: Props) => {
           <div className="relative w-full aspect-square overflow-hidden border border-border bg-foreground/5">
             <img src={data.fotoBase64} alt="Foto capturada" className="w-full h-full object-cover" />
             
-            {/* Scanner line effect */}
             <div className="absolute inset-0 pointer-events-none">
               <div
                 className="absolute left-0 right-0 h-[2px] bg-accent shadow-[0_0_12px_hsl(var(--accent)),0_0_30px_hsl(var(--accent)/0.4)]"
-                style={{
-                  animation: "scanLine 2.2s ease-in-out infinite",
-                }}
+                style={{ animation: "scanLine 2.2s ease-in-out infinite" }}
               />
             </div>
 
-            {/* Grid overlay */}
             <div className="absolute inset-0 pointer-events-none opacity-20"
               style={{
                 backgroundImage: `
@@ -195,7 +222,6 @@ const StepFoto = ({ data, update, next, back }: Props) => {
               }}
             />
 
-            {/* Corner brackets */}
             <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full pointer-events-none">
               <path d="M30 60 L30 30 L60 30" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
               <path d="M340 30 L370 30 L370 60" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
@@ -203,7 +229,6 @@ const StepFoto = ({ data, update, next, back }: Props) => {
               <path d="M340 370 L370 370 L370 340" fill="none" stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.8" />
             </svg>
 
-            {/* SCANDENT label */}
             <div className="absolute top-3 left-3 flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
               <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-accent drop-shadow-md">
@@ -211,7 +236,6 @@ const StepFoto = ({ data, update, next, back }: Props) => {
               </span>
             </div>
 
-            {/* Elapsed time counter */}
             <div className="absolute bottom-3 right-3 bg-foreground/70 backdrop-blur-sm px-3 py-1.5 rounded">
               <span className="font-mono text-[0.85rem] text-accent font-bold tabular-nums">
                 {String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:{String(elapsedSeconds % 60).padStart(2, "0")}
@@ -242,36 +266,94 @@ const StepFoto = ({ data, update, next, back }: Props) => {
 
       {analisis && (
         <div className="space-y-6">
-          {/* Photo with markers */}
+          {/* Photo with focused marker system */}
           {data.fotoBase64 && (
             <div className="relative w-full aspect-square overflow-hidden border border-border">
               <img src={data.fotoBase64} alt="Tu foto" className="w-full h-full object-cover" />
-              
-              {/* Numbered markers on detected findings */}
+
+              {/* SVG overlay for markers + connector lines */}
+              <svg
+                viewBox="0 0 100 100"
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                preserveAspectRatio="none"
+              >
+                {analisis.hallazgos.map((h, i) => {
+                  const pos = markerPositions[i];
+                  if (!pos) return null;
+                  const isActive = activeMarker === i;
+                  const color = SEVERITY_DOT[h.severidad] || "#C9A86C";
+
+                  // Small numbered labels on the left edge, evenly spaced
+                  const labelY = 12 + i * (76 / Math.max(analisis.hallazgos.length - 1, 1));
+                  const labelX = 5;
+
+                  return (
+                    <g key={i}>
+                      {/* Connector line from label to point — only when active */}
+                      {isActive && (
+                        <line
+                          x1={labelX}
+                          y1={labelY}
+                          x2={pos.x}
+                          y2={pos.y}
+                          stroke={color}
+                          strokeWidth="0.4"
+                          strokeDasharray="1 0.8"
+                          opacity="0.85"
+                          style={{ transition: "all 0.3s ease" }}
+                        />
+                      )}
+
+                      {/* Target dot — always visible but small; bigger when active */}
+                      <circle
+                        cx={pos.x}
+                        cy={pos.y}
+                        r={isActive ? 2.5 : 1.2}
+                        fill={isActive ? color : "transparent"}
+                        stroke={color}
+                        strokeWidth={isActive ? 0.6 : 0.4}
+                        opacity={isActive ? 1 : 0.5}
+                        style={{ transition: "all 0.3s ease" }}
+                      />
+
+                      {/* Pulse ring when active */}
+                      {isActive && (
+                        <circle
+                          cx={pos.x}
+                          cy={pos.y}
+                          r="4"
+                          fill="none"
+                          stroke={color}
+                          strokeWidth="0.3"
+                          opacity="0.4"
+                        >
+                          <animate attributeName="r" from="2.5" to="6" dur="1.2s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" from="0.5" to="0" dur="1.2s" repeatCount="indefinite" />
+                        </circle>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+
+              {/* Numbered badges on the left margin — interactive */}
               {analisis.hallazgos.map((h, i) => {
-                if (!h.ubicacion) return null;
-                const pos = getMarkerPosition(h.ubicacion);
                 const isActive = activeMarker === i;
                 const colorClass = SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent border-accent";
-                // Offset overlapping markers slightly
-                const offsetX = pos.x + (i % 3 - 1) * 3;
-                const offsetY = pos.y + Math.floor(i / 3) * 3;
-                
+                const labelY = 12 + i * (76 / Math.max(analisis.hallazgos.length - 1, 1));
+
                 return (
                   <button
                     key={i}
                     onClick={() => setActiveMarker(isActive ? null : i)}
                     className={`absolute z-20 flex items-center justify-center transition-all duration-300 cursor-pointer
-                      ${isActive ? "w-8 h-8 -ml-4 -mt-4 scale-125" : "w-6 h-6 -ml-3 -mt-3 hover:scale-110"}
+                      ${isActive ? "w-7 h-7 -ml-3.5 -mt-3.5 scale-110" : "w-5 h-5 -ml-2.5 -mt-2.5 hover:scale-110 opacity-80"}
                     `}
-                    style={{ left: `${offsetX}%`, top: `${offsetY}%` }}
+                    style={{ left: "5%", top: `${labelY}%` }}
                     title={h.tipo.replace(/_/g, " ")}
                   >
-                    {/* Pulse ring */}
-                    <span className={`absolute inset-0 rounded-full ${colorClass} opacity-30 animate-ping`} />
-                    {/* Marker dot */}
-                    <span className={`relative rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-mono font-bold text-[10px] ${colorClass}
-                      ${isActive ? "w-8 h-8" : "w-6 h-6"}
+                    <span className={`relative rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-mono font-bold text-[9px] ${colorClass}
+                      ${isActive ? "w-7 h-7" : "w-5 h-5"}
                     `}>
                       {i + 1}
                     </span>
@@ -279,31 +361,32 @@ const StepFoto = ({ data, update, next, back }: Props) => {
                 );
               })}
 
-              {/* Active marker tooltip */}
+              {/* Active marker mini-label near the target point */}
               {activeMarker !== null && analisis.hallazgos[activeMarker] && (() => {
                 const h = analisis.hallazgos[activeMarker];
-                const pos = getMarkerPosition(h.ubicacion);
-                const showAbove = pos.y > 50;
+                const pos = markerPositions[activeMarker];
+                if (!pos) return null;
+                // Position the label near the point but offset so it doesn't cover it
+                const labelLeft = pos.x > 60 ? pos.x - 40 : pos.x + 5;
+                const labelTop = pos.y > 70 ? pos.y - 14 : pos.y + 5;
+
                 return (
                   <div
-                    className={`absolute z-30 left-3 right-3 p-3 bg-foreground/90 backdrop-blur-sm text-background text-[0.8rem] leading-snug shadow-xl transition-all duration-300
-                      ${showAbove ? "bottom-[45%]" : "top-[45%]"}
-                    `}
+                    className="absolute z-30 px-2.5 py-1.5 bg-foreground/85 backdrop-blur-sm text-background text-[0.7rem] leading-snug shadow-xl pointer-events-none max-w-[55%]"
+                    style={{
+                      left: `${labelLeft}%`,
+                      top: `${labelTop}%`,
+                      transition: "all 0.3s ease",
+                    }}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold ${SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent"}`}>
-                        {activeMarker + 1}
-                      </span>
-                      <span className="font-display font-bold text-[0.8rem] uppercase">{h.tipo.replace(/_/g, " ")}</span>
-                    </div>
-                    <p className="opacity-90">{h.descripcion}</p>
-                    {h.ubicacion && <p className="text-[0.7rem] mt-1 opacity-60">📍 {h.ubicacion}</p>}
+                    <span className="font-display font-bold uppercase text-[0.65rem]">{h.tipo.replace(/_/g, " ")}</span>
+                    <span className="block opacity-75 text-[0.6rem] mt-0.5">📍 {h.ubicacion}</span>
                   </div>
                 );
               })()}
 
               {/* SCANDENT overlay label */}
-              <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
+              <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
                 <span className="w-1.5 h-1.5 bg-accent rounded-full" />
                 <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/80 drop-shadow-md">
                   SCANDENT · {analisis.hallazgos.length} HALLAZGO{analisis.hallazgos.length !== 1 ? "S" : ""}
@@ -321,27 +404,32 @@ const StepFoto = ({ data, update, next, back }: Props) => {
           </div>
 
           {analisis.hallazgos.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="font-display font-bold text-[0.85rem] uppercase tracking-wide text-mid-gray">Hallazgos detectados</h4>
-              {analisis.hallazgos.map((h, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveMarker(activeMarker === i ? null : i)}
-                  className={`w-full text-left p-4 border transition-all duration-200 ${SEVERITY_STYLES[h.severidad] || "border-border"}
-                    ${activeMarker === i ? "ring-2 ring-accent shadow-md" : "hover:shadow-sm"}
-                  `}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 ${SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent"}`}>
-                      {i + 1}
-                    </span>
-                    <span className="font-display font-bold text-[0.85rem] uppercase">{h.tipo.replace(/_/g, " ")}</span>
-                    <span className="text-[0.7rem] opacity-60">· {h.confianza}</span>
-                  </div>
-                  <p className="text-[0.85rem] pl-7">{h.descripcion}</p>
-                  {h.ubicacion && <p className="text-[0.75rem] mt-1 opacity-70 pl-7">📍 {h.ubicacion}</p>}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <h4 className="font-display font-bold text-[0.85rem] uppercase tracking-wide text-mid-gray">
+                Hallazgos detectados — toca para ubicar
+              </h4>
+              {analisis.hallazgos.map((h, i) => {
+                const isActive = activeMarker === i;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setActiveMarker(isActive ? null : i)}
+                    className={`w-full text-left p-3.5 border transition-all duration-200 ${SEVERITY_STYLES[h.severidad] || "border-border"}
+                      ${isActive ? "ring-2 ring-accent shadow-md scale-[1.01]" : "hover:shadow-sm"}
+                    `}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 ${SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent"}`}>
+                        {i + 1}
+                      </span>
+                      <span className="font-display font-bold text-[0.85rem] uppercase">{h.tipo.replace(/_/g, " ")}</span>
+                      <span className="text-[0.7rem] opacity-60 ml-auto">{h.severidad}</span>
+                    </div>
+                    <p className="text-[0.8rem] pl-7 leading-relaxed">{h.descripcion}</p>
+                    {h.ubicacion && <p className="text-[0.7rem] mt-1 opacity-70 pl-7">📍 {h.ubicacion}</p>}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -365,7 +453,7 @@ const StepFoto = ({ data, update, next, back }: Props) => {
             </button>
           </div>
 
-          {/* ImplantX Score — shown when ausencia dental detected */}
+          {/* ImplantX Score */}
           {analisis.implantxScore && (
             <div className="border border-accent/30 bg-accent/5 p-5 space-y-3">
               <div className="flex items-center gap-2">
