@@ -156,6 +156,21 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   const analisis = data.analisis;
   const markerPositions = analisis ? spreadMarkers(analisis.hallazgos) : [];
 
+  // Compute zoom transform when a marker is active
+  const getZoomTransform = (markerIndex: number | null) => {
+    if (markerIndex === null || !markerPositions[markerIndex]) return { transform: "scale(1) translate(0%, 0%)", transformOrigin: "center center" };
+    const pos = markerPositions[markerIndex];
+    // Zoom 2x and pan so the point is centered
+    const tx = 50 - pos.x; // shift so pos.x -> 50%
+    const ty = 50 - pos.y;
+    return {
+      transform: `scale(2.2) translate(${tx * 0.45}%, ${ty * 0.45}%)`,
+      transformOrigin: `${pos.x}% ${pos.y}%`,
+    };
+  };
+
+  const zoomStyle = getZoomTransform(activeMarker);
+
   return (
     <div>
       <h2 className="font-display font-[800] text-[clamp(1.5rem,4vw,2.5rem)] leading-tight mb-2">
@@ -269,129 +284,80 @@ const StepFoto = ({ data, update, next, back }: Props) => {
           {/* Photo with focused marker system */}
           {data.fotoBase64 && (
             <div className="relative w-full aspect-square overflow-hidden border border-border">
-              <img src={data.fotoBase64} alt="Tu foto" className="w-full h-full object-cover" />
-
-              {/* SVG overlay for markers + connector lines */}
-              <svg
-                viewBox="0 0 100 100"
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                preserveAspectRatio="none"
+              {/* Zoomable layer: image + target dots */}
+              <div
+                className="relative w-full h-full transition-transform duration-500 ease-out"
+                style={zoomStyle}
               >
-                {analisis.hallazgos.map((h, i) => {
-                  const pos = markerPositions[i];
-                  if (!pos) return null;
-                  const isActive = activeMarker === i;
-                  const color = SEVERITY_DOT[h.severidad] || "#C9A86C";
+                <img src={data.fotoBase64} alt="Tu foto" className="w-full h-full object-cover" />
 
-                  // Small numbered labels on the left edge, evenly spaced
-                  const labelY = 12 + i * (76 / Math.max(analisis.hallazgos.length - 1, 1));
-                  const labelX = 5;
+                {/* SVG overlay — only target dots */}
+                <svg
+                  viewBox="0 0 100 100"
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  preserveAspectRatio="none"
+                >
+                  {analisis.hallazgos.map((h, i) => {
+                    const pos = markerPositions[i];
+                    if (!pos) return null;
+                    const isActive = activeMarker === i;
+                    const color = SEVERITY_DOT[h.severidad] || "#C9A86C";
 
-                  return (
-                    <g key={i}>
-                      {/* Connector line from label to point — only when active */}
-                      {isActive && (
-                        <line
-                          x1={labelX}
-                          y1={labelY}
-                          x2={pos.x}
-                          y2={pos.y}
-                          stroke={color}
-                          strokeWidth="0.4"
-                          strokeDasharray="1 0.8"
-                          opacity="0.85"
-                          style={{ transition: "all 0.3s ease" }}
-                        />
-                      )}
-
-                      {/* Target dot — always visible but small; bigger when active */}
-                      <circle
-                        cx={pos.x}
-                        cy={pos.y}
-                        r={isActive ? 2.5 : 1.2}
-                        fill={isActive ? color : "transparent"}
-                        stroke={color}
-                        strokeWidth={isActive ? 0.6 : 0.4}
-                        opacity={isActive ? 1 : 0.5}
-                        style={{ transition: "all 0.3s ease" }}
-                      />
-
-                      {/* Pulse ring when active */}
-                      {isActive && (
+                    return (
+                      <g key={i}>
                         <circle
                           cx={pos.x}
                           cy={pos.y}
-                          r="4"
-                          fill="none"
+                          r={isActive ? 3 : 1.2}
+                          fill={isActive ? color : "transparent"}
                           stroke={color}
-                          strokeWidth="0.3"
-                          opacity="0.4"
-                        >
-                          <animate attributeName="r" from="2.5" to="6" dur="1.2s" repeatCount="indefinite" />
-                          <animate attributeName="opacity" from="0.5" to="0" dur="1.2s" repeatCount="indefinite" />
-                        </circle>
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Numbered badges on the left margin — interactive */}
-              {analisis.hallazgos.map((h, i) => {
-                const isActive = activeMarker === i;
-                const colorClass = SEVERITY_MARKER_COLORS[h.severidad] || "bg-accent border-accent";
-                const labelY = 12 + i * (76 / Math.max(analisis.hallazgos.length - 1, 1));
-
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setActiveMarker(isActive ? null : i)}
-                    className={`absolute z-20 flex items-center justify-center transition-all duration-300 cursor-pointer
-                      ${isActive ? "w-7 h-7 -ml-3.5 -mt-3.5 scale-110" : "w-5 h-5 -ml-2.5 -mt-2.5 hover:scale-110 opacity-80"}
-                    `}
-                    style={{ left: "5%", top: `${labelY}%` }}
-                    title={h.tipo.replace(/_/g, " ")}
-                  >
-                    <span className={`relative rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-mono font-bold text-[9px] ${colorClass}
-                      ${isActive ? "w-7 h-7" : "w-5 h-5"}
-                    `}>
-                      {i + 1}
-                    </span>
-                  </button>
-                );
-              })}
-
-              {/* Active marker mini-label near the target point */}
-              {activeMarker !== null && analisis.hallazgos[activeMarker] && (() => {
-                const h = analisis.hallazgos[activeMarker];
-                const pos = markerPositions[activeMarker];
-                if (!pos) return null;
-                // Position the label near the point but offset so it doesn't cover it
-                const labelLeft = pos.x > 60 ? pos.x - 40 : pos.x + 5;
-                const labelTop = pos.y > 70 ? pos.y - 14 : pos.y + 5;
-
-                return (
-                  <div
-                    className="absolute z-30 px-2.5 py-1.5 bg-foreground/85 backdrop-blur-sm text-background text-[0.7rem] leading-snug shadow-xl pointer-events-none max-w-[55%]"
-                    style={{
-                      left: `${labelLeft}%`,
-                      top: `${labelTop}%`,
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    <span className="font-display font-bold uppercase text-[0.65rem]">{h.tipo.replace(/_/g, " ")}</span>
-                    <span className="block opacity-75 text-[0.6rem] mt-0.5">📍 {h.ubicacion}</span>
-                  </div>
-                );
-              })()}
-
-              {/* SCANDENT overlay label */}
-              <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-                <span className="w-1.5 h-1.5 bg-accent rounded-full" />
-                <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/80 drop-shadow-md">
-                  SCANDENT · {analisis.hallazgos.length} HALLAZGO{analisis.hallazgos.length !== 1 ? "S" : ""}
-                </span>
+                          strokeWidth={isActive ? 0.8 : 0.4}
+                          opacity={isActive ? 1 : 0.5}
+                          style={{ transition: "all 0.3s ease" }}
+                        />
+                        {isActive && (
+                          <circle cx={pos.x} cy={pos.y} r="5" fill="none" stroke={color} strokeWidth="0.4" opacity="0.4">
+                            <animate attributeName="r" from="3" to="8" dur="1.2s" repeatCount="indefinite" />
+                            <animate attributeName="opacity" from="0.5" to="0" dur="1.2s" repeatCount="indefinite" />
+                          </circle>
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
               </div>
+
+              {/* Fixed overlay: active marker label (doesn't zoom) */}
+              {activeMarker !== null && analisis.hallazgos[activeMarker] && (
+                <div className="absolute bottom-3 left-3 right-3 z-30 px-3 py-2 bg-foreground/85 backdrop-blur-sm text-background text-[0.75rem] leading-snug shadow-xl pointer-events-none">
+                  <span className="font-display font-bold uppercase text-[0.7rem]">
+                    {analisis.hallazgos[activeMarker].tipo.replace(/_/g, " ")}
+                  </span>
+                  <span className="block opacity-75 text-[0.65rem] mt-0.5">
+                    📍 {analisis.hallazgos[activeMarker].ubicacion}
+                  </span>
+                </div>
+              )}
+
+              {/* SCANDENT overlay label (doesn't zoom) */}
+              {activeMarker === null && (
+                <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
+                  <span className="w-1.5 h-1.5 bg-accent rounded-full" />
+                  <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-white/80 drop-shadow-md">
+                    SCANDENT · {analisis.hallazgos.length} HALLAZGO{analisis.hallazgos.length !== 1 ? "S" : ""}
+                  </span>
+                </div>
+              )}
+
+              {/* Tap to unzoom hint */}
+              {activeMarker !== null && (
+                <button
+                  onClick={() => setActiveMarker(null)}
+                  className="absolute top-3 right-3 z-30 px-2.5 py-1 bg-foreground/70 backdrop-blur-sm text-background font-mono text-[9px] tracking-wider uppercase cursor-pointer hover:bg-foreground/90 transition-colors"
+                >
+                  ✕ Vista completa
+                </button>
+              )}
             </div>
           )}
 
