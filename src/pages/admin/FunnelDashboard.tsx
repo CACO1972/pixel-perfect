@@ -79,8 +79,7 @@ export default function FunnelDashboard() {
     setCounts(results);
 
     // Recent payment events
-    let q2 = supabase
-      .from("funnel_events")
+    let q2 = (supabase.from("funnel_events") as any)
       .select("id, event, nombre, email, motivo, zona, created_at")
       .order("created_at", { ascending: false })
       .limit(20);
