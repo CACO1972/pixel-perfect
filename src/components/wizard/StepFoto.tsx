@@ -156,6 +156,21 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   const analisis = data.analisis;
   const markerPositions = analisis ? spreadMarkers(analisis.hallazgos) : [];
 
+  // Compute zoom transform when a marker is active
+  const getZoomTransform = (markerIndex: number | null) => {
+    if (markerIndex === null || !markerPositions[markerIndex]) return { transform: "scale(1) translate(0%, 0%)", transformOrigin: "center center" };
+    const pos = markerPositions[markerIndex];
+    // Zoom 2x and pan so the point is centered
+    const tx = 50 - pos.x; // shift so pos.x -> 50%
+    const ty = 50 - pos.y;
+    return {
+      transform: `scale(2.2) translate(${tx * 0.45}%, ${ty * 0.45}%)`,
+      transformOrigin: `${pos.x}% ${pos.y}%`,
+    };
+  };
+
+  const zoomStyle = getZoomTransform(activeMarker);
+
   return (
     <div>
       <h2 className="font-display font-[800] text-[clamp(1.5rem,4vw,2.5rem)] leading-tight mb-2">
