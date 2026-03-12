@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { WizardData } from "@/pages/Evaluacion";
 import type { DentalHallazgo } from "@/lib/api";
 import { trackFunnel } from "@/lib/funnel";
