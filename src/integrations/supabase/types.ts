@@ -2990,6 +2990,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scandent_payments: {
+        Row: {
+          amount: number
+          commerce_order: string
+          created_at: string | null
+          email: string | null
+          flow_order: string | null
+          flow_raw: Json | null
+          id: string
+          paid_at: string | null
+          plan: string | null
+          status: string
+          token: string | null
+        }
+        Insert: {
+          amount: number
+          commerce_order: string
+          created_at?: string | null
+          email?: string | null
+          flow_order?: string | null
+          flow_raw?: Json | null
+          id?: string
+          paid_at?: string | null
+          plan?: string | null
+          status?: string
+          token?: string | null
+        }
+        Update: {
+          amount?: number
+          commerce_order?: string
+          created_at?: string | null
+          email?: string | null
+          flow_order?: string | null
+          flow_raw?: Json | null
+          id?: string
+          paid_at?: string | null
+          plan?: string | null
+          status?: string
+          token?: string | null
+        }
+        Relationships: []
+      }
       second_opinions: {
         Row: {
           budget_document_path: string | null
