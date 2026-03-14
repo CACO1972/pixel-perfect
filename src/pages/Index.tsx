@@ -3,7 +3,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import PainSection from "@/components/landing/PainSection";
 import ExplainerSection from "@/components/landing/ExplainerSection";
 import RoutesSection from "@/components/landing/RoutesSection";
-import HumanaSection from "@/components/landing/HumanaSection";
+import HumanaAppsSection from "@/components/landing/HumanaAppsSection";
 import QuoteSection from "@/components/landing/QuoteSection";
 import EquipoSection from "@/components/landing/EquipoSection";
 import ProgramsSection from "@/components/landing/ProgramsSection";
@@ -20,7 +20,7 @@ const Index = () => {
       <PainSection />
       <ExplainerSection />
       <RoutesSection />
-      <HumanaSection />
+      <HumanaAppsSection />
       <QuoteSection />
       <EquipoSection />
       <ProgramsSection />

@@ -249,6 +249,29 @@
 /* Crosshair cursor on hero */
 .cursor-crosshair { cursor: crosshair; }
 
+/* HUMANA brutal button */
+.humana-btn-brutal {
+  padding: 14px 28px;
+  font-family: var(--font-anton);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  background: hsl(var(--primary));
+  color: hsl(var(--background));
+  border: none;
+  position: relative;
+  transition: transform 0.1s;
+  box-shadow: 6px 6px 0 hsl(0 0% 100% / 0.08);
+  cursor: pointer;
+}
+.humana-btn-brutal:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 hsl(0 0% 100% / 0.08);
+}
+.humana-btn-brutal:active {
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0 hsl(0 0% 100% / 0.08);
+}
+
 /* Audio player custom styling */
 audio::-webkit-media-controls-panel {
   background: hsl(var(--secondary));

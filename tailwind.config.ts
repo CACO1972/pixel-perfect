@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         display: ['Outfit', 'sans-serif'],
+        anton: ['Anton', 'sans-serif'],
         serif: ['Cormorant Garamond', 'serif'],
         body: ['DM Sans', 'sans-serif'],
       },
