@@ -122,7 +122,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     tagline: "La IA que observa donde el ojo no llega",
     description:
       "Orientación visual dental en 2 minutos. Detección temprana. Sin reemplazar al profesional, potenciándolo.",
-    cta: "ESCANEAR AHORA →",
+    cta: "EN DESARROLLO →",
     image: mockupScandent,
   },
   {
@@ -168,7 +168,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     tagline: "Diagnóstico de caries incipientes. Tratamiento regenerativo.",
     description:
       "Sin inyecciones. Sin taladro. IA para detectar caries en etapa inicial y guiar tratamiento regenerativo no invasivo. El fin de la odontología del miedo.",
-    cta: "EVALUAR RIESGO →",
+    cta: "EN DESARROLLO →",
     image: mockupZerocaries,
     even: true,
   },
@@ -180,7 +180,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     tagline: "Belleza contextual. No universales. No el número áureo.",
     description:
       "SCUT-FBP5500. HuggingFace. FaceXFormer. 5.500 rostros analizados. La belleza como función de edad, cultura y género.",
-    cta: "ANALIZAR ARMONÍA →",
+    cta: "EN DESARROLLO →",
     image: mockupArmonia,
   },
   {
@@ -195,7 +195,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     tagline: "Tu asistente clínico nunca duerme",
     description:
       "IA conversacional para el flujo clínico diario. Desde notas hasta decisiones. El copiloto que todo dentista necesitaba.",
-    cta: "ACTIVAR COPILOT →",
+    cta: "EN DESARROLLO →",
     image: mockupCopilot,
     even: true,
   },
