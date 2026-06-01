@@ -20,9 +20,10 @@ interface AppBlockProps {
   image: string;
   even?: boolean;
   color: string;
+  inDevelopment?: boolean;
 }
 
-const AppBlock = ({ number, category, name, tagline, description, cta, image, even, color }: AppBlockProps) => {
+const AppBlock = ({ number, category, name, tagline, description, cta, image, even, color, inDevelopment }: AppBlockProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,10 +94,19 @@ const AppBlock = ({ number, category, name, tagline, description, cta, image, ev
               {description}
             </p>
 
-            {/* CTA */}
-            <button className="humana-btn-brutal self-start mt-2">
-              {cta}
-            </button>
+            {/* CTA / Status */}
+            {inDevelopment ? (
+              <div className="self-start mt-2 inline-flex items-center gap-2 border border-accent/40 px-4 py-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-accent">
+                  En desarrollo
+                </span>
+              </div>
+            ) : (
+              <button className="humana-btn-brutal self-start mt-2">
+                {cta}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -124,6 +134,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
       "Orientación visual dental en 2 minutos. Detección temprana. Sin reemplazar al profesional, potenciándolo.",
     cta: "EN DESARROLLO →",
     image: mockupScandent,
+    inDevelopment: true,
   },
   {
     color: "270 50% 45%",
@@ -171,6 +182,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     cta: "EN DESARROLLO →",
     image: mockupZerocaries,
     even: true,
+    inDevelopment: true,
   },
   {
     color: "270 50% 45%",
@@ -182,6 +194,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
       "SCUT-FBP5500. HuggingFace. FaceXFormer. 5.500 rostros analizados. La belleza como función de edad, cultura y género.",
     cta: "EN DESARROLLO →",
     image: mockupArmonia,
+    inDevelopment: true,
   },
   {
     color: "310 45% 38%",
@@ -198,6 +211,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     cta: "EN DESARROLLO →",
     image: mockupCopilot,
     even: true,
+    inDevelopment: true,
   },
   {
     color: "345 60% 35%",
@@ -209,6 +223,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
       "Machine learning para retención de pacientes. Integración con aseguradoras. El paciente que no vuelve, ya no se pierde. — En desarrollo.",
     cta: "EN DESARROLLO →",
     image: mockupSentia,
+    inDevelopment: true,
   },
 ];
 
