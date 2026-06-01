@@ -134,6 +134,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
       "Orientación visual dental en 2 minutos. Detección temprana. Sin reemplazar al profesional, potenciándolo.",
     cta: "EN DESARROLLO →",
     image: mockupScandent,
+    inDevelopment: true,
   },
   {
     color: "270 50% 45%",
@@ -181,6 +182,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     cta: "EN DESARROLLO →",
     image: mockupZerocaries,
     even: true,
+    inDevelopment: true,
   },
   {
     color: "270 50% 45%",
@@ -192,6 +194,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
       "SCUT-FBP5500. HuggingFace. FaceXFormer. 5.500 rostros analizados. La belleza como función de edad, cultura y género.",
     cta: "EN DESARROLLO →",
     image: mockupArmonia,
+    inDevelopment: true,
   },
   {
     color: "310 45% 38%",
@@ -208,6 +211,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
     cta: "EN DESARROLLO →",
     image: mockupCopilot,
     even: true,
+    inDevelopment: true,
   },
   {
     color: "345 60% 35%",
@@ -219,6 +223,7 @@ const apps: (Omit<AppBlockProps, "color"> & { color: string })[] = [
       "Machine learning para retención de pacientes. Integración con aseguradoras. El paciente que no vuelve, ya no se pierde. — En desarrollo.",
     cta: "EN DESARROLLO →",
     image: mockupSentia,
+    inDevelopment: true,
   },
 ];
 
