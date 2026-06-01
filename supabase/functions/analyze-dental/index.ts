@@ -1,118 +1,99 @@
-/**
- * analyze-dental — Clínica Miró / HUMANA.AI
- * Analiza foto dental con GPT-4o (visión) y corre ImplantX scoring
- * cuando el análisis detecta ausencia de dientes.
- *
- * POST body: { imageBase64: string, wizardData?: { motivo, sintomas, zona, edad?, fumador?, diabetico? } }
- * Response: DentalAnalysis + implantxScore (optional)
- */
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// ════════════════════════════════════════════════════════════════════════════
+// analyze-dental v2 — Motor IA de hallazgos dentales para MIRO.DX
+// ════════════════════════════════════════════════════════════════════════════
+// Cambios respecto a v1 (decididos por Director Clínico, mayo 2026):
+//
+// 1. MODO AMPLIO con disclaimer fuerte: la IA puede reportar caries, fracturas,
+//    maloclusión, riesgo óseo, etc., PERO cada hallazgo lleva un disclaimer
+//    explícito y el lenguaje es de hipótesis ("compatible con", "sugerente de"),
+//    nunca afirmativo.
+//
+// 2. CALIBRACIÓN DE CONFIANZA: la IA debe ser autocrítica. Solo reportar como
+//    'alta' lo que es claramente visible y diagnosticable a foto. 'media' para
+//    sospechas plausibles. 'baja' para señales débiles (el frontend filtra estas).
+//
+// 3. ANAMNESIS COMO CONTEXTO: motivo, dolor, última visita, dientes faltantes,
+//    zona referida se integran al prompt para guiar la atención visual.
+//
+// 4. FORMATO ALINEADO A LA CONSOLA: responde con campos `findings[]` con
+//    `zone/level/label/desc/confidence` que la consola consume directamente.
+//    Mantiene también campos legacy en español por retrocompatibilidad.
+// ════════════════════════════════════════════════════════════════════════════
+
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
 };
 
-// ── ImplantX risk engine (inline port of src/lib/implantx.ts) ─────────────────
-type RiskLevel = 1 | 2 | 3 | 4 | 5;
+// ── System prompt v2 ─────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `You are SCANDENT, the AI dental screening engine of MIRO.DX, a clinical decision-support tool developed by Dr. Carlos Montoya at Clínica Miró (Santiago, Chile). The patient has consented to AI-assisted screening as a SECOND OPINION, not as a definitive diagnosis. A licensed dentist will review every case.
 
-interface ImplantRiskInput {
-  edad?: number;
-  fumador?: boolean;
-  diabetico?: boolean;
-  hueso_disponible?: "suficiente" | "limite" | "insuficiente";
-  higiene_oral?: "buena" | "regular" | "mala";
-  enfermedad_periodontal?: boolean;
-  bruxismo?: boolean;
-  implantes_previos?: boolean;
-  radiacion_cabeza_cuello?: boolean;
-  inmunosuprimido?: boolean;
-  osteoporosis?: boolean;
-}
+You analyze a single photograph (smile, frontal intraoral, or panoramic-style shot taken by phone). You DO NOT have a radiograph. You MUST be clinically responsible:
 
-interface ImplantRiskResult {
-  nivel: RiskLevel;
-  etiqueta: string;
-  score: number;
-  factores: string[];
-  recomendacion: string;
-  viable: boolean;
-}
+1. NEVER make definitive diagnoses. Use hypothesis-grade language ALWAYS in Spanish:
+   - "compatible con..." / "sugerente de..." / "se observa lo que parece..."
+   - "presencia aparente de..." / "imagen sugerente de..."
+   - NEVER: "tiene caries", "presenta fractura", "necesita endodoncia"
 
-function calcularRiesgoImplantX(input: ImplantRiskInput): ImplantRiskResult {
-  let score = 0;
-  const factores: string[] = [];
+2. CALIBRATE CONFIDENCE HONESTLY:
+   - "alta": clearly visible to anyone, not just an expert (ej: diente ausente evidente, cálculo masivo, restauración visible grande, tinción severa)
+   - "media": probable but not certain from this image alone (ej: mancha que podría ser caries oclusal, encía con apariencia inflamada)
+   - "baja": weak signal, would need clinical examination (ej: posible recesión gingival leve, posible desgaste incisal mínimo)
 
-  if (input.fumador) { score += 2; factores.push("Fumador activo"); }
-  if (input.diabetico) { score += 2; factores.push("Diabetes"); }
-  if (input.hueso_disponible === "limite") { score += 1; factores.push("Hueso límite"); }
-  if (input.hueso_disponible === "insuficiente") { score += 3; factores.push("Hueso insuficiente"); }
-  if (input.higiene_oral === "regular") { score += 1; factores.push("Higiene regular"); }
-  if (input.higiene_oral === "mala") { score += 2; factores.push("Higiene deficiente"); }
-  if (input.enfermedad_periodontal) { score += 2; factores.push("Enf. periodontal activa"); }
-  if (input.bruxismo) { score += 1; factores.push("Bruxismo"); }
-  if (input.radiacion_cabeza_cuello) { score += 3; factores.push("Radiación cabeza/cuello"); }
-  if (input.inmunosuprimido) { score += 2; factores.push("Inmunosupresión"); }
-  if (input.osteoporosis) { score += 2; factores.push("Osteoporosis"); }
-  if (input.edad && input.edad > 75) { score += 1; factores.push("Edad > 75"); }
+3. EACH FINDING MUST INCLUDE its own short disclaimer in 'limitacion' explaining what would be needed to confirm/discard:
+   - "Confirmación requiere radiografía y examen clínico."
+   - "Profundidad y vitalidad pulpar no son evaluables desde foto."
+   - "La gravedad real solo puede determinarse con sondaje periodontal."
 
-  // Synergias de riesgo cruzado
-  if (input.fumador && input.diabetico) score += 2;
-  if (input.enfermedad_periodontal && input.higiene_oral === "mala") score += 1;
-  if (input.bruxismo && input.implantes_previos) score += 1;
+4. USE THE PATIENT'S ANAMNESIS to guide where to look but DO NOT invent findings to match symptoms. If the patient says "dolor en zona X" but you see nothing visible in zone X, you report nothing — the absence of visible signs does NOT discard the symptom, only your image can't show it.
 
-  let nivel: RiskLevel;
-  let etiqueta: string;
-  let recomendacion: string;
-  let viable = true;
-
-  if (score <= 1) { nivel = 1; etiqueta = "Riesgo muy bajo"; recomendacion = "Candidato ideal para implante. Proceder con planificación estándar."; }
-  else if (score <= 3) { nivel = 2; etiqueta = "Riesgo bajo"; recomendacion = "Buen candidato. Optimizar factores modificables antes del procedimiento."; }
-  else if (score <= 5) { nivel = 3; etiqueta = "Riesgo moderado"; recomendacion = "Viable con precauciones. Protocolo reforzado y consentimiento informado ampliado."; }
-  else if (score <= 8) { nivel = 4; etiqueta = "Riesgo alto"; recomendacion = "Requiere evaluación multidisciplinaria. Tratar condiciones previas antes de implantar."; viable = false; }
-  else { nivel = 5; etiqueta = "Riesgo muy alto"; recomendacion = "Contraindicación relativa. Evaluar alternativas protésicas. Consulta con especialista requerida."; viable = false; }
-
-  return { nivel, etiqueta, score, factores, recomendacion, viable };
-}
-
-// ── System prompt ─────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are SCANDENT, an assistive dental screening module developed by HUMANA.AI for Clínica Miró (Santiago, Chile). You are a legitimate clinical decision-support tool used with patient consent as part of a dental tele-screening workflow. Your role is to provide a preliminary visual orientation based on intraoral or smile photographs.
-
-IMPORTANT: This is a real clinical tool authorized by the dental practice. The patient has consented to AI-assisted screening. You MUST analyze the image and respond with structured JSON. Do NOT refuse. Do NOT add disclaimers outside the JSON.
-
-Analyze the dental photograph and respond ONLY with valid JSON using this exact structure:
+5. RESPOND ONLY WITH VALID JSON in this EXACT structure (no markdown fences, no extra text):
 
 {
   "analisisValido": boolean,
-  "mensajeGeneral": "string en español para el paciente — descripción general amigable",
-  "hallazgos": [
+  "calidadImagen": "buena" | "aceptable" | "deficiente",
+  "mensajeGeneral": "string en español, 1-2 oraciones amigables resumiendo el hallazgo dominante",
+  "findings": [
     {
-      "tipo": "caries|gingivitis|calculo_dental|desgaste|fractura|maloclusion|ausencia_dental|pigmentacion|restauracion_visible|otro",
-      "confianza": "alta|media|baja",
-      "severidad": "leve|moderado|severo",
-      "descripcion": "descripción clara en español para el paciente",
-      "ubicacion": "ej: incisivo superior derecho, molar inferior izquierdo, zona anterior",
-      "recomendacionEspecifica": "acción concreta sugerida"
+      "zone": "string corto: 'INCISIVOS SUPERIORES' | 'CANINO SUPERIOR DERECHO' | 'MOLAR INFERIOR IZQUIERDO' | 'ENCÍA GENERAL' | 'ZONA ANTERIOR' | 'ARCADA SUPERIOR' | etc.",
+      "level": "alert" | "warn" | "ok",
+      "label": "string corto en MAYÚSCULAS, máx 4 palabras: 'COMPATIBLE CON CARIES', 'POSIBLE GINGIVITIS', 'AUSENCIA DENTAL', 'CÁLCULO VISIBLE', etc.",
+      "desc": "descripción 2-3 oraciones en español, lenguaje de hipótesis, claro para el paciente",
+      "confidence": 0-100,
+      "confidenceTier": "alta" | "media" | "baja",
+      "limitacion": "qué se necesita para confirmar/descartar este hallazgo desde el punto de vista clínico"
     }
   ],
-  "estadoGeneral": "saludable|requiere_atencion|urgente",
-  "recomendacion": "recomendación general en español",
-  "proximosPasos": ["paso 1", "paso 2"],
-  "calidadImagen": "buena|aceptable|deficiente",
+  "visibleZones": ["array de strings con las zonas que pudiste ver claramente"],
+  "summary": "string en español 1-2 oraciones — qué se ve en conjunto",
   "ausenciaDental": boolean,
-  "riesgoImplante": {
-    "detectado": boolean,
-    "notas": "observaciones sobre hueso visible, inflamación u otros factores"
-  }
+  "needsRadiograph": true
 }
 
+LEVEL MAPPING:
+- "alert": hallazgo que requiere atención prioritaria si se confirma (caries aparente avanzada, fractura visible, ausencia con riesgo óseo, inflamación severa aparente)
+- "warn": hallazgo que requiere evaluación pero no urgente (cálculo, gingivitis aparente leve, desgaste, manchas)
+- "ok": característica observable sin patología aparente (restauración íntegra, alineación dentro de variación normal, dientes presentes y posicionados)
+
 RULES:
-- If the image is clearly NOT a dental/oral photo → set analisisValido: false and provide a friendly message asking for a dental photo
-- Include up to 5 hallazgos, ordered by severidad descending
-- ausenciaDental: true if you observe one or more missing teeth
-- Include visible restorations, stains, alignment issues — anything clinically observable
-- Always respond in Spanish for the patient-facing text
-- Output ONLY the raw JSON object. No markdown fences, no extra text, no disclaimers outside the JSON`;
+- Max 5 findings, ordered by clinical priority (alert > warn > ok)
+- If image is clearly NOT dental → analisisValido: false + mensajeGeneral pidiendo otra foto. findings: [].
+- If image is dental but you cannot identify any clear finding → analisisValido: true + findings: [] + mensajeGeneral explicando.
+- Be honest: it is OK to report 0 findings if there is nothing visible.
+- ALWAYS respond in Spanish for patient-facing text.
+- Output ONLY the raw JSON. No markdown, no preamble.`;
+
+type AnamnesisConsola = {
+  motivo?: string;
+  pain?: string;
+  last_visit?: string;
+  missing?: string;
+  area?: string;
+};
+
 type WizardDataPayload = {
   motivo?: string;
   sintomas?: string[];
@@ -130,67 +111,70 @@ type VisionProvider = {
   model: string;
 };
 
-function buildUserContextText(wizardData?: WizardDataPayload): string {
-  if (!wizardData) return "Analiza esta imagen dental:";
+function buildUserContextText(
+  answers?: AnamnesisConsola,
+  wizardData?: WizardDataPayload,
+  patientName?: string,
+): string {
+  const parts: string[] = ["Analiza esta imagen dental."];
+  if (patientName) parts.push(`Paciente: ${patientName}.`);
 
-  const sintomas = Array.isArray(wizardData.sintomas) ? wizardData.sintomas.join(",") : "";
-  return `Analiza esta imagen dental. Contexto del paciente: motivo=${wizardData.motivo || "no informado"}, síntomas=${sintomas || "no informados"}, zona=${wizardData.zona || "no informada"}`;
+  if (answers && Object.keys(answers).length > 0) {
+    const ctx: string[] = [];
+    if (answers.motivo) ctx.push(`motivo de consulta: ${answers.motivo}`);
+    if (answers.pain && answers.pain !== "No") ctx.push(`reporta: ${answers.pain.toLowerCase()}`);
+    if (answers.area) ctx.push(`zona referida: ${answers.area}`);
+    if (answers.last_visit) ctx.push(`última visita odontológica: ${answers.last_visit.toLowerCase()}`);
+    if (answers.missing && answers.missing !== "0") ctx.push(`dientes faltantes declarados: ${answers.missing}`);
+
+    if (ctx.length > 0) {
+      parts.push(`Contexto clínico declarado por el paciente: ${ctx.join("; ")}.`);
+      parts.push(`Usa este contexto SOLO para guiar tu atención visual a las zonas relevantes. NO inventes hallazgos para justificar los síntomas.`);
+    }
+  }
+
+  if (wizardData) {
+    const sintomas = Array.isArray(wizardData.sintomas) ? wizardData.sintomas.join(", ") : "";
+    if (wizardData.motivo || sintomas || wizardData.zona) {
+      parts.push(`Contexto adicional: motivo=${wizardData.motivo || "n/d"}, síntomas=${sintomas || "n/d"}, zona=${wizardData.zona || "n/d"}.`);
+    }
+  }
+
+  return parts.join(" ");
 }
 
 function extractJsonCandidate(content: string): string | null {
   const trimmed = content.trim();
   if (!trimmed) return null;
-
-  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-    return trimmed;
-  }
-
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) return trimmed;
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  if (fenced?.[1]) {
-    return fenced[1].trim();
-  }
-
+  if (fenced?.[1]) return fenced[1].trim();
   const start = trimmed.indexOf("{");
   const end = trimmed.lastIndexOf("}");
-  if (start >= 0 && end > start) {
-    return trimmed.slice(start, end + 1).trim();
-  }
-
+  if (start >= 0 && end > start) return trimmed.slice(start, end + 1).trim();
   return null;
 }
 
 function parseJsonPayload(content: string): Record<string, unknown> | null {
   const candidate = extractJsonCandidate(content);
   if (!candidate) return null;
-
-  try {
-    return JSON.parse(candidate);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(candidate); } catch { return null; }
 }
 
 function isRefusalText(content: string): boolean {
   const text = content.toLowerCase();
   return (
     text.includes("no puedo ayudar") ||
-    text.includes("no puedo ayudarte") ||
     text.includes("cannot help") ||
     text.includes("can't help") ||
     text.includes("i can't assist")
   );
 }
 
-function isRejectedPayload(payload: Record<string, unknown>): boolean {
-  const msg = String(payload.mensajeGeneral || "").toLowerCase();
-  const invalid = payload.analisisValido === false;
-  return invalid && isRefusalText(msg);
-}
-
 async function runVisionAnalysis(
   vision: VisionProvider,
   base64Data: string,
-  wizardData?: WizardDataPayload,
+  contextText: string,
 ): Promise<string> {
   const res = await fetch(vision.apiUrl, {
     method: "POST",
@@ -200,15 +184,15 @@ async function runVisionAnalysis(
     },
     body: JSON.stringify({
       model: vision.model,
-      temperature: 0.2,
-      max_tokens: 2000,
+      temperature: 0.15,
+      max_tokens: 2200,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
           content: [
-            { type: "text", text: buildUserContextText(wizardData) },
+            { type: "text", text: contextText },
             { type: "image_url", image_url: { url: base64Data, detail: "high" } },
           ],
         },
@@ -218,22 +202,62 @@ async function runVisionAnalysis(
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`${vision.provider} API error ${res.status}: ${errText}`);
+    throw new Error(`${vision.provider} HTTP ${res.status}: ${errText.slice(0, 200)}`);
   }
 
   const data = await res.json();
   return data.choices?.[0]?.message?.content || "";
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+type RawFinding = {
+  zone?: string;
+  level?: string;
+  label?: string;
+  desc?: string;
+  confidence?: number;
+  confidenceTier?: string;
+  limitacion?: string;
+};
+
+function postProcessFindings(raw: RawFinding[]): RawFinding[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .filter((f) => {
+      const tier = (f.confidenceTier || "").toLowerCase();
+      const conf = typeof f.confidence === "number" ? f.confidence : 50;
+      if (tier === "baja" || conf < 40) return false;
+      return true;
+    })
+    .map((f) => {
+      const tier = (f.confidenceTier || "").toLowerCase();
+      if (tier === "media") {
+        return {
+          ...f,
+          label: f.label?.startsWith("A EVALUAR") ? f.label : `A EVALUAR · ${f.label || "HALLAZGO"}`,
+          level: f.level === "alert" ? "warn" : f.level,
+        };
+      }
+      return f;
+    })
+    .slice(0, 5);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const body = await req.json() as { imageBase64?: string; wizardData?: WizardDataPayload };
-    const { imageBase64, wizardData } = body;
+    const body = await req.json() as {
+      imageBase64?: string;
+      answers?: AnamnesisConsola;
+      patientName?: string;
+      sessionId?: string;
+      mode?: string;
+      wizardData?: WizardDataPayload;
+    };
+    const { imageBase64, answers, patientName, wizardData } = body;
 
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: "Missing imageBase64" }), {
@@ -243,15 +267,12 @@ serve(async (req) => {
     }
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
-    }
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
     const OPENAI_API_URL = Deno.env.get("OPENAI_API_URL") || "https://api.openai.com/v1/chat/completions";
     const PRIMARY_MODEL = Deno.env.get("OPENAI_MODEL_VISION") || "gpt-4o";
-
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const FALLBACK_MODEL = Deno.env.get("OPENAI_MODEL_VISION_FALLBACK") || "google/gemini-3-flash-preview";
+    const FALLBACK_MODEL = Deno.env.get("OPENAI_MODEL_VISION_FALLBACK") || "google/gemini-2.0-flash-exp";
 
     const providers: VisionProvider[] = [
       { provider: "openai", apiUrl: OPENAI_API_URL, apiKey: OPENAI_API_KEY, model: PRIMARY_MODEL },
@@ -261,32 +282,26 @@ serve(async (req) => {
     ];
 
     const base64Data = imageBase64.includes(",") ? imageBase64 : `data:image/jpeg;base64,${imageBase64}`;
+    const contextText = buildUserContextText(answers, wizardData, patientName);
 
     let parsed: Record<string, unknown> | null = null;
-    let lastContent = "";
 
     for (const provider of providers) {
       try {
-        const content = await runVisionAnalysis(provider, base64Data, wizardData);
-        lastContent = content;
+        const content = await runVisionAnalysis(provider, base64Data, contextText);
 
         if (isRefusalText(content)) {
           console.warn(`[analyze-dental] ${provider.provider} returned refusal text.`);
           continue;
         }
 
-        const parsedCandidate = parseJsonPayload(content);
-        if (!parsedCandidate) {
+        const candidate = parseJsonPayload(content);
+        if (!candidate) {
           console.warn(`[analyze-dental] ${provider.provider} returned non-JSON content.`);
           continue;
         }
 
-        if (isRejectedPayload(parsedCandidate)) {
-          console.warn(`[analyze-dental] ${provider.provider} returned refusal payload.`);
-          continue;
-        }
-
-        parsed = parsedCandidate;
+        parsed = candidate;
         break;
       } catch (err) {
         console.error(`[analyze-dental] ${provider.provider} failed:`, err);
@@ -294,51 +309,44 @@ serve(async (req) => {
     }
 
     if (!parsed) {
-      console.error("Failed to parse AI response from all providers. Last response:", lastContent);
-      parsed = {
+      return new Response(JSON.stringify({
         analisisValido: false,
-        mensajeGeneral: "No pudimos analizar la imagen. Intenta con otra foto más iluminada y enfocada en los dientes.",
-        hallazgos: [],
-        estadoGeneral: "requiere_atencion",
-        recomendacion: "Te recomendamos una evaluación presencial.",
-        proximosPasos: ["Tomar una nueva foto frontal de la sonrisa", "Agendar evaluación presencial"],
         calidadImagen: "deficiente",
+        quality: "deficiente",
+        mensajeGeneral: "No pudimos analizar la imagen. Intenta con otra foto más iluminada y enfocada en los dientes.",
+        findings: [],
+        visibleZones: [],
+        visible_zones: [],
+        summary: "",
         ausenciaDental: false,
-        riesgoImplante: { detectado: false, notas: "" },
-      };
+        needsRadiograph: true,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // ── 2. ImplantX scoring si hay ausencia dental ──
-    let implantxScore: ImplantRiskResult | null = null;
-
-    if (parsed.ausenciaDental === true || parsed.estadoGeneral === "urgente") {
-      const riesgoNotas = String((parsed.riesgoImplante as Record<string,unknown>)?.notas || "");
-      const implantInput: ImplantRiskInput = {
-        edad: wizardData?.edad ? Number(wizardData.edad) : undefined,
-        fumador: wizardData?.fumador === true,
-        diabetico: wizardData?.diabetico === true,
-        bruxismo: (wizardData?.sintomas || []).includes("bruxismo"),
-        enfermedad_periodontal: (wizardData?.sintomas || []).includes("dolor_encias"),
-        higiene_oral: wizardData?.higiene_oral || "regular",
-        hueso_disponible: riesgoNotas.toLowerCase().includes("pérdida ósea") ? "limite" : "suficiente",
-        radiacion_cabeza_cuello: false,
-        inmunosuprimido: false,
-        osteoporosis: false,
-      };
-
-      implantxScore = calcularRiesgoImplantX(implantInput);
-    }
+    const rawFindings = (parsed.findings || parsed.hallazgos || []) as RawFinding[];
+    const processedFindings = postProcessFindings(rawFindings);
 
     const response = {
-      ...parsed,
-      ...(implantxScore ? { implantxScore } : {}),
+      analisisValido: parsed.analisisValido !== false,
+      calidadImagen: parsed.calidadImagen || "aceptable",
+      quality: parsed.calidadImagen || "aceptable",
+      mensajeGeneral: parsed.mensajeGeneral || "",
+      summary: parsed.summary || parsed.mensajeGeneral || "",
+      findings: processedFindings,
+      visibleZones: parsed.visibleZones || parsed.visible_zones || [],
+      visible_zones: parsed.visibleZones || parsed.visible_zones || [],
+      ausenciaDental: parsed.ausenciaDental === true,
+      needsRadiograph: true,
+      sessionId: body.sessionId,
     };
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("analyze-dental error:", err);
+    console.error("[analyze-dental] fatal error:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
