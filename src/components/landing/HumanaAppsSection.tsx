@@ -20,9 +20,10 @@ interface AppBlockProps {
   image: string;
   even?: boolean;
   color: string;
+  inDevelopment?: boolean;
 }
 
-const AppBlock = ({ number, category, name, tagline, description, cta, image, even, color }: AppBlockProps) => {
+const AppBlock = ({ number, category, name, tagline, description, cta, image, even, color, inDevelopment }: AppBlockProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,10 +94,19 @@ const AppBlock = ({ number, category, name, tagline, description, cta, image, ev
               {description}
             </p>
 
-            {/* CTA */}
-            <button className="humana-btn-brutal self-start mt-2">
-              {cta}
-            </button>
+            {/* CTA / Status */}
+            {inDevelopment ? (
+              <div className="self-start mt-2 inline-flex items-center gap-2 border border-accent/40 px-4 py-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-accent">
+                  En desarrollo
+                </span>
+              </div>
+            ) : (
+              <button className="humana-btn-brutal self-start mt-2">
+                {cta}
+              </button>
+            )}
           </div>
         </div>
       </div>
