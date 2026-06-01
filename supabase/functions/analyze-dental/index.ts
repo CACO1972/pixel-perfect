@@ -267,17 +267,22 @@ serve(async (req) => {
     }
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
-
     const OPENAI_API_URL = Deno.env.get("OPENAI_API_URL") || "https://api.openai.com/v1/chat/completions";
-    const PRIMARY_MODEL = Deno.env.get("OPENAI_MODEL_VISION") || "gpt-4o";
+    const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL_VISION") || "gpt-4o-mini";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const FALLBACK_MODEL = Deno.env.get("OPENAI_MODEL_VISION_FALLBACK") || "google/gemini-2.0-flash-exp";
+    const LOVABLE_MODEL = Deno.env.get("LOVABLE_MODEL_VISION") || "google/gemini-2.5-flash";
 
+    if (!LOVABLE_API_KEY && !OPENAI_API_KEY) {
+      throw new Error("No vision provider configured (LOVABLE_API_KEY or OPENAI_API_KEY)");
+    }
+
+    // Lovable AI Gateway as primary (more reliable, multimodal), OpenAI as fallback
     const providers: VisionProvider[] = [
-      { provider: "openai", apiUrl: OPENAI_API_URL, apiKey: OPENAI_API_KEY, model: PRIMARY_MODEL },
       ...(LOVABLE_API_KEY
-        ? [{ provider: "lovable-gateway", apiUrl: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: LOVABLE_API_KEY, model: FALLBACK_MODEL }]
+        ? [{ provider: "lovable-gateway", apiUrl: "https://ai.gateway.lovable.dev/v1/chat/completions", apiKey: LOVABLE_API_KEY, model: LOVABLE_MODEL }]
+        : []),
+      ...(OPENAI_API_KEY
+        ? [{ provider: "openai", apiUrl: OPENAI_API_URL, apiKey: OPENAI_API_KEY, model: OPENAI_MODEL }]
         : []),
     ];
 
