@@ -320,6 +320,10 @@ serve(async (req) => {
         quality: "deficiente",
         mensajeGeneral: "No pudimos analizar la imagen. Intenta con otra foto más iluminada y enfocada en los dientes.",
         findings: [],
+        hallazgos: [],
+        estadoGeneral: "requiere_atencion",
+        recomendacion: "",
+        proximosPasos: [],
         visibleZones: [],
         visible_zones: [],
         summary: "",
@@ -333,6 +337,20 @@ serve(async (req) => {
     const rawFindings = (parsed.findings || parsed.hallazgos || []) as RawFinding[];
     const processedFindings = postProcessFindings(rawFindings);
 
+    // Legacy shape expected by wizard (StepFoto): hallazgos[]
+    const sevMap: Record<string, string> = { alert: "severo", warn: "moderado", ok: "leve" };
+    const hallazgos = processedFindings.map((f) => ({
+      tipo: f.label || "HALLAZGO",
+      confianza: f.confidenceTier || (typeof f.confidence === "number" && f.confidence >= 70 ? "alta" : "media"),
+      severidad: sevMap[(f.level || "").toLowerCase()] || "moderado",
+      descripcion: f.desc || "",
+      ubicacion: f.zone || "",
+      recomendacionEspecifica: f.limitacion || "",
+    }));
+    const hasAlert = processedFindings.some((f) => f.level === "alert");
+    const hasWarn = processedFindings.some((f) => f.level === "warn");
+    const estadoGeneral = hasAlert ? "urgente" : hasWarn ? "requiere_atencion" : "saludable";
+
     const response = {
       analisisValido: parsed.analisisValido !== false,
       calidadImagen: parsed.calidadImagen || "aceptable",
@@ -340,6 +358,10 @@ serve(async (req) => {
       mensajeGeneral: parsed.mensajeGeneral || "",
       summary: parsed.summary || parsed.mensajeGeneral || "",
       findings: processedFindings,
+      hallazgos,
+      estadoGeneral,
+      recomendacion: (parsed.recomendacion as string) || "",
+      proximosPasos: (parsed.proximosPasos as string[]) || [],
       visibleZones: parsed.visibleZones || parsed.visible_zones || [],
       visible_zones: parsed.visibleZones || parsed.visible_zones || [],
       ausenciaDental: parsed.ausenciaDental === true,

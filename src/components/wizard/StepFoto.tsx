@@ -154,7 +154,8 @@ const StepFoto = ({ data, update, next, back }: Props) => {
   };
 
   const analisis = data.analisis;
-  const markerPositions = analisis ? spreadMarkers(analisis.hallazgos) : [];
+  const hallazgos = analisis?.hallazgos ?? [];
+  const markerPositions = analisis ? spreadMarkers(hallazgos) : [];
 
   // Compute zoom transform when a marker is active
   const getZoomTransform = (markerIndex: number | null) => {
